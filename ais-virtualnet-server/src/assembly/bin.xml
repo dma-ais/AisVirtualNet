@@ -2,7 +2,7 @@
 	<id>dist</id>
 	<formats>
 		<format>dir</format>
-		<format>gzip</format>
+		<format>zip</format>
 	</formats>
 	<fileSets>
 		<fileSet>
@@ -20,7 +20,6 @@
 			<outputDirectory>/</outputDirectory>
 			<includes>
 				<include>*.xml</include>
-				<include>log4j.xml</include>
 			</includes>
 		</fileSet>
 	</fileSets>

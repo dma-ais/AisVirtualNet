@@ -15,6 +15,7 @@
  */
 package dk.dma.ais.virtualnet.server;
 
+import java.io.FileNotFoundException;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import org.slf4j.Logger;
@@ -23,22 +24,35 @@ import org.slf4j.LoggerFactory;
 import com.beust.jcommander.Parameter;
 import com.google.inject.Injector;
 
+import dk.dma.ais.virtualnet.server.configuration.ServerConfiguration;
 import dk.dma.app.application.AbstractDaemon;
 
 /**
- * AisVirtualNet server daemon
+ * AisVirtualNetServer server daemon
  */
-public class ServerDaemon extends AbstractDaemon {
+public class Daemon extends AbstractDaemon {
     
-    private static final Logger LOG = LoggerFactory.getLogger(ServerDaemon.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Daemon.class);
     
-    @Parameter(names = "-file", description = "AisVirtualNet server configuration file")
+    @Parameter(names = "-file", description = "AisVirtualNetServer server configuration file")
     String confFile = "server.xml";
     
     @Override
     protected void runDaemon(Injector injector) throws Exception {
-        LOG.info("Starting AisVirtualNet server with configuration: " + confFile);
+        LOG.info("Starting AisVirtualNetServer server with configuration: " + confFile);
         
+        // Load configuration
+        ServerConfiguration conf;
+        try {
+            conf = ServerConfiguration.load(confFile);
+        } catch (FileNotFoundException e) {
+            LOG.error(e.getMessage());
+            return;
+        }
+        
+        // Start server
+        AisVirtualNetServer aisVirtualNetServer = new AisVirtualNetServer(conf);
+        aisVirtualNetServer.start();
         
     }
     
@@ -56,7 +70,7 @@ public class ServerDaemon extends AbstractDaemon {
                 System.exit(-1);
             }
         });
-        new ServerDaemon().execute(args);
+        new Daemon().execute(args);
     }
 
 }

@@ -26,6 +26,10 @@
     <module>ais-virtualnet-transponder</module>
   </modules>
 
+  <properties>
+        <jetty.version>9.0.0.v20130308</jetty.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>dk.dma.ais</groupId>

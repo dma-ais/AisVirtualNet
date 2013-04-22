@@ -1,24 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<aisViewConfiguration>
+<serverConfiguration>
+	<port>8080</port>
 	<aisbus>
 		<provider xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="tcpClientProviderConfiguration">
-			<hostPort>linux06.fomfrv.dk:9991</hostPort>
+			<hostPort>ais163.sealan.dk:65262</hostPort>
 		</provider>
-<!-- 		<filter xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="downSampleFilterConfiguration"> -->
-<!-- 			<samplingRate>60</samplingRate> -->
-<!-- 		</filter> -->
+		<filter xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="taggingFilterConfiguration">
+			<filterTagging>
+				<sourceBs>2190047</sourceBs>
+			</filterTagging>
+		</filter>		
 	</aisbus>
-	<serverConfiguration>
-		<port>8081</port>
-		<webappPath>web</webappPath>
-		<contextPath>/aisview</contextPath>
-	</serverConfiguration>
-	<cleanupInterval>600</cleanupInterval>
-	<cleanupTtl>43200</cleanupTtl>
-	<liveTargetTtl>1200</liveTargetTtl>
-	<pastTrackLiveTtl>3600</pastTrackLiveTtl>
-	<pastTrackMinDist>100</pastTrackMinDist>
-	<pastTrackSatTtl>3600</pastTrackSatTtl>
-	<recordPastTrack>true</recordPastTrack>
-	<satTargetTtl>172800</satTargetTtl>
-</aisViewConfiguration>
+</serverConfiguration>
