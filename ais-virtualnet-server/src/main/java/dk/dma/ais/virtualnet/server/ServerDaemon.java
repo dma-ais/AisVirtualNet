@@ -24,18 +24,19 @@ import org.slf4j.LoggerFactory;
 import com.beust.jcommander.Parameter;
 import com.google.inject.Injector;
 
-import dk.dma.ais.virtualnet.server.configuration.ServerConfiguration;
 import dk.dma.app.application.AbstractDaemon;
 
 /**
  * AisVirtualNetServer server daemon
  */
-public class Daemon extends AbstractDaemon {
+public class ServerDaemon extends AbstractDaemon {
     
-    private static final Logger LOG = LoggerFactory.getLogger(Daemon.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServerDaemon.class);
     
     @Parameter(names = "-file", description = "AisVirtualNetServer server configuration file")
     String confFile = "server.xml";
+    
+    AisVirtualNetServer server;
     
     @Override
     protected void runDaemon(Injector injector) throws Exception {
@@ -51,14 +52,15 @@ public class Daemon extends AbstractDaemon {
         }
         
         // Start server
-        AisVirtualNetServer aisVirtualNetServer = new AisVirtualNetServer(conf);
-        aisVirtualNetServer.start();
+        server = new AisVirtualNetServer(conf);
+        server.start();
         
     }
     
     @Override
     protected void shutdown() {
         LOG.info("Shutting down");
+        server.shutdown();
         super.shutdown();
     }
     
@@ -70,7 +72,7 @@ public class Daemon extends AbstractDaemon {
                 System.exit(-1);
             }
         });
-        new Daemon().execute(args);
+        new ServerDaemon().execute(args);
     }
 
 }

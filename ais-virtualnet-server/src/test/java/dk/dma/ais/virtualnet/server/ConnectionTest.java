@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
-import dk.dma.ais.virtualnet.server.configuration.ServerConfiguration;
 
 public class ConnectionTest {
 
@@ -52,7 +51,7 @@ public class ConnectionTest {
 
     @Test
     public void clientTest() throws Exception {
-        WebSocketSession clientSession = new WebSocketSession();
+        WebSocketClientSession clientSession = new WebSocketClientSession("ole","ole");
         
         // Make client and connect
         WebSocketClient client = new WebSocketClient();
@@ -64,8 +63,7 @@ public class ConnectionTest {
         clientSession.getConnected().await(10, TimeUnit.SECONDS);
         System.out.println("Connected");
         
-        clientSession.sendText("Hello world");
-        clientSession.sendText("Hello world 2");
+        
         
         Thread.sleep(5000);
     }

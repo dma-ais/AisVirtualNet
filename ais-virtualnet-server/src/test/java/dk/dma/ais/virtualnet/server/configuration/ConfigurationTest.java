@@ -27,6 +27,7 @@ import dk.dma.ais.configuration.bus.AisBusConfiguration;
 import dk.dma.ais.configuration.bus.provider.TcpClientProviderConfiguration;
 import dk.dma.ais.configuration.filter.TaggingFilterConfiguration;
 import dk.dma.ais.configuration.transform.PacketTaggingConfiguration;
+import dk.dma.ais.virtualnet.server.ServerConfiguration;
 
 public class ConfigurationTest {
     

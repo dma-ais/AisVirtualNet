@@ -1,3 +1,18 @@
+/* Copyright (c) 2011 Danish Maritime Authority
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this library.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package dk.dma.ais.virtualnet.server;
 
 import java.io.IOException;
@@ -6,8 +21,18 @@ import java.util.concurrent.CountDownLatch;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class WebSocketSession implements WebSocketListener {
+import com.google.gson.Gson;
+
+import dk.dma.ais.packet.AisPacket;
+
+public abstract class WebSocketSession implements WebSocketListener {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(WebSocketSession.class);
+    
+    private final Gson gson = new Gson();
 
     private final CountDownLatch connected = new CountDownLatch(1);
 
@@ -17,38 +42,48 @@ public class WebSocketSession implements WebSocketListener {
         
     }
     
+    /**
+     * Method to handle incoming messages
+     */
+    protected abstract void handleMessage(Message message);
+    
     @Override
     public void onWebSocketConnect(Session session) {
-        System.out.println("onWebSocketConnect");
+        LOG.info("Client connected: " + session.getRemoteAddress());
         this.session = session;
-        getConnected().countDown();        
+        getConnected().countDown();
     }
     
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        System.out.println("onWebSocketClose");
+        LOG.info("Client connection closed: " + session.getRemoteAddress());
         session = null;
     }
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
-        System.out.println("GOT BINARY");
+        LOG.error("Received binary data");
         Session s = session;
         try {
             s.close(1, "Expected text only");
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Failed to close web sokcet", e);
         }
     }
 
     @Override
-    public void onWebSocketError(Throwable arg0) {
-        System.out.println("onWebSocketError");
+    public void onWebSocketError(Throwable t) {
+        LOG.error("Web socket error", t);
     }
 
     @Override
     public void onWebSocketText(String message) {
-        System.out.println("onWebSocketText message: " + message);
+        LOG.debug("Text message received: " + message);
+        
+        // Try to deserialize into message
+        Message msg = gson.fromJson(message, Message.class);
+        // TODO handle exception
+        handleMessage(msg);        
     }
     
     public final void close() {
@@ -58,11 +93,20 @@ public class WebSocketSession implements WebSocketListener {
                 s.close(2, "Close requested");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Failed to close web socket", e);
         }
     }
     
-    public final void sendText(String text) {
+    public void sendPacket(AisPacket packet) {
+        sendMessage(new Message(packet));
+    }
+    
+    protected final void sendMessage(Message message) {
+        sendText(gson.toJson(message));
+    }
+    
+    private final void sendText(String text) {
+        LOG.debug("Sending text: " + text);
         Session s = session;
         RemoteEndpoint r = s == null ? null : s.getRemote();
         if (r != null) {
@@ -73,7 +117,7 @@ public class WebSocketSession implements WebSocketListener {
                 // ignore
             }
         } else {
-            System.out.println("Could not send");
+            LOG.error("Could not send to web socket");
         }
     }
 
