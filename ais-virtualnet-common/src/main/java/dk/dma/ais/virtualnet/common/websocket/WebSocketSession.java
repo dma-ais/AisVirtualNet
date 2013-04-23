@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.server;
+package dk.dma.ais.virtualnet.common.websocket;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.virtualnet.common.message.Message;
 
 public abstract class WebSocketSession implements WebSocketListener {
     
@@ -78,7 +79,7 @@ public abstract class WebSocketSession implements WebSocketListener {
 
     @Override
     public void onWebSocketText(String message) {
-        LOG.debug("Text message received: " + message);
+        LOG.info("Text message received: " + message);
         
         // Try to deserialize into message
         Message msg = gson.fromJson(message, Message.class);
@@ -101,12 +102,18 @@ public abstract class WebSocketSession implements WebSocketListener {
         sendMessage(new Message(packet));
     }
     
+    public void sendPacket(String packet) {
+        Message message = new Message();
+        message.setPacket(packet);
+        sendMessage(message);
+    }
+    
     protected final void sendMessage(Message message) {
         sendText(gson.toJson(message));
     }
     
     private final void sendText(String text) {
-        LOG.debug("Sending text: " + text);
+        LOG.info("Sending text: " + text);
         Session s = session;
         RemoteEndpoint r = s == null ? null : s.getRemote();
         if (r != null) {

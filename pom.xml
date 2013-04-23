@@ -22,6 +22,7 @@
   </scm>
 
   <modules>
+    <module>ais-virtualnet-common</module>
     <module>ais-virtualnet-server</module>
     <module>ais-virtualnet-transponder</module>
   </modules>

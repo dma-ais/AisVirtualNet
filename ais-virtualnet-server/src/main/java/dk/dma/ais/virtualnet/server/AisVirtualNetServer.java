@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
+import dk.dma.ais.bus.provider.CollectorProvider;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.enav.util.function.Consumer;
 
@@ -44,9 +45,9 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AisVirtualNetServer.class);
 
-    private final ServerConfiguration conf;
     private final AisBus aisBus;
     private final Server server;
+    private final CollectorProvider collector = new CollectorProvider();
     
     /**
      * Connected clients
@@ -54,7 +55,6 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     private final Set<WebSocketServerSession> clients = Collections.newSetFromMap(new ConcurrentHashMap<WebSocketServerSession, Boolean>());
 
     public AisVirtualNetServer(ServerConfiguration conf) {
-        this.conf = conf;
         // Create web server
         server = new Server(conf.getPort());
         // Sets setReuseAddress
@@ -79,6 +79,9 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         distributer.getConsumers().add(this);
         distributer.init();
         aisBus.registerConsumer(distributer);
+        // Initialize collector and register in aisbus        
+        collector.init();
+        aisBus.registerProvider(collector);
     }
     
     /**
@@ -97,7 +100,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
      * @param packet
      */
     public void distribute(AisPacket packet) {
-        // TODO
+        collector.accept(packet);
     }
     
     /**

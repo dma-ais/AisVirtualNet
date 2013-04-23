@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
+import dk.dma.ais.virtualnet.transponder.WebSocketClientSession;
 
 public class ConnectionTest {
 

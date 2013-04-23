@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.virtualnet.common.message.Message;
+import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 public class WebSocketServerSession extends WebSocketSession {
     
@@ -59,7 +61,7 @@ public class WebSocketServerSession extends WebSocketSession {
             authenticated = server.authenticate(message.getUsername(), message.getPassword());
             LOG.info("Authentication result: " + authenticated);
         }
-        String strPacket = message.getAisPacket();
+        String strPacket = message.getPacket();
         if (strPacket == null) {
             return;
         }

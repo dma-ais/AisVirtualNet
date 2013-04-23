@@ -10,17 +10,9 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>ais-virtualnet-transponder</artifactId>
+	<artifactId>ais-virtualnet-common</artifactId>
 	<version>0.1-SNAPSHOT</version>
-	<name>AisVirtualNet transponder</name>
-	<description>AisVirtualNet transponder</description>
-
-	<dependencies>
-		<dependency>
-			<groupId>dk.dma.ais.virtualnet</groupId>
-			<artifactId>ais-virtualnet-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-	</dependencies>
+	<name>AisVirtualNet common</name>
+	<description>AisVirtualNet common</description>
 
 </project>

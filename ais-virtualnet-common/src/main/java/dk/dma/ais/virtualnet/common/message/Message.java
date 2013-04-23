@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.server;
+package dk.dma.ais.virtualnet.common.message;
 
 import dk.dma.ais.packet.AisPacket;
 
@@ -23,7 +23,7 @@ import dk.dma.ais.packet.AisPacket;
  */
 public class Message {
     
-    private String aisPacket;
+    private String packet;
     private String username;
     private String password;
     
@@ -32,15 +32,15 @@ public class Message {
     }
     
     public Message(AisPacket packet) {
-        this.aisPacket = packet.getStringMessage();
+        this.packet = packet.getStringMessage();
     }
-
-    public String getAisPacket() {
-        return aisPacket;
+    
+    public String getPacket() {
+        return packet;
     }
-
-    public void setAisPacket(String aisPacket) {
-        this.aisPacket = aisPacket;
+    
+    public void setPacket(String packet) {
+        this.packet = packet;
     }
 
     public String getUsername() {
