@@ -15,20 +15,23 @@
  */
 package dk.dma.ais.virtualnet.server;
 
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
-import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
 import dk.dma.ais.virtualnet.server.configuration.ServerConfiguration;
 
-public class ClientConnectTest {
-    
+public class ConnectionTest {
+
     private static final int TESTPORT = 14050;
-        
+
     private AisVirtualNetServer server;
-    
+
     @Before
     public void setup() throws InterruptedException {
         // Make configuration
@@ -36,28 +39,35 @@ public class ClientConnectTest {
         AisBusConfiguration aisBusConf = new AisBusConfiguration();
         conf.setAisbusConfiguration(aisBusConf);
         conf.setPort(TESTPORT);
-        
-        // Make server instance
+
+        // Make and start server instance
         server = new AisVirtualNetServer(conf);
         server.start();
-        
-        Thread.sleep(5000);
     }
-    
+
     @After
     public void stop() {
         server.shutdown();
     }
-    
+
     @Test
-    public void clientTest() throws InterruptedException {
-        Thread.sleep(5000);
+    public void clientTest() throws Exception {
+        WebSocketSession clientSession = new WebSocketSession();
         
         // Make client and connect
+        WebSocketClient client = new WebSocketClient();
+        System.out.println("Starting client");
+        client.start();
+        System.out.println("Connecting");
+        client.connect(clientSession, new URI("ws://localhost:" + TESTPORT)).get();
+        System.out.println("Connecting, waiting for connection");
+        clientSession.getConnected().await(10, TimeUnit.SECONDS);
+        System.out.println("Connected");
         
+        clientSession.sendText("Hello world");
+        clientSession.sendText("Hello world 2");
+        
+        Thread.sleep(5000);
     }
-    
-    
-    
 
 }

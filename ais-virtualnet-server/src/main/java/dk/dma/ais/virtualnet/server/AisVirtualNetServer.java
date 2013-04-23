@@ -58,13 +58,15 @@ public class AisVirtualNetServer extends Thread {
         ServerConnector connector = (ServerConnector) server.getConnectors()[0];
         connector.setReuseAddress(true);
 
-        final AisVirtualNetServer virtualNet = this;
         WebSocketHandler wsHandler = new WebSocketHandler() {
             @Override
             public void configure(WebSocketServletFactory factory) {
                 factory.setCreator(new WebSocketCreator() {
                     public Object createWebSocket(UpgradeRequest req, UpgradeResponse resp) {
-                        return new VirtualNetClientSession(virtualNet);
+                        // Make a connection manager that handles active connections (or do it directly in this server)
+                        // Make a derived WebSocketServerSession that has a handle to the server so connections can be uregistreed
+                        // Or use static collections directly in WebSocketServerSession
+                        return new WebSocketSession();
                     }
                 });
             }
