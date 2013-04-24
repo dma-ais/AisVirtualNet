@@ -57,7 +57,7 @@ public class ServerConnection extends Thread {
      * @param packet
      */
     public void receive(String packet) {
-        transponder.send(packet);
+        transponder.receive(packet);
 
     }
 

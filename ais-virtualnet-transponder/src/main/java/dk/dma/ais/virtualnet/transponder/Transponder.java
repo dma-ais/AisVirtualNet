@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.commons.lang.StringUtils;
@@ -41,6 +42,8 @@ import dk.dma.ais.sentence.Bbm;
 import dk.dma.ais.sentence.Sentence;
 import dk.dma.ais.sentence.SentenceException;
 import dk.dma.ais.sentence.Vdm;
+import dk.dma.ais.virtualnet.transponder.table.TargetTable;
+import dk.dma.enav.model.geometry.Position;
 
 /**
  * Virtual transponder
@@ -53,28 +56,38 @@ public class Transponder extends Thread {
     private final TransponderConfiguration conf;
     private final ServerConnection serverConnection;
     private final ServerSocket serverSocket;
+    private final TransponderOwnMessage ownMessage;
+    private final TargetTable targetTable;
 
+    private volatile boolean clientConnected;
     private volatile Socket socket;
     private volatile PrintWriter out;
     private Abm abm = new Abm();
     private Bbm bbm = new Bbm();
     private Abk abk = new Abk();
     private int sequence = 0;
+    @GuardedBy("this")
+    private Position ownPos;
 
     public Transponder(TransponderConfiguration conf) throws IOException {
         this.conf = conf;
         serverConnection = new ServerConnection(this, conf);
         serverSocket = new ServerSocket(conf.getPort());
+        ownMessage = new TransponderOwnMessage(this, conf.getOwnPosInterval());
+        targetTable = new TargetTable();
+    }
+    
+    public TargetTable getTargetTable() {
+        return targetTable;
     }
 
     /**
-     * Data received from server
+     * Data received from network
      * 
      * @param packet
      */
-    public void send(String strPacket) {
-        // Send to client
-        if (out == null) {
+    public void receive(String strPacket) {
+        if (!clientConnected) {
             return;
         }
         // Make packet and get ais message
@@ -86,6 +99,8 @@ public class Transponder extends Thread {
             LOG.info("Failed to parse message: " + e.getMessage());
             return;
         }
+        // Update target table
+        targetTable.update(message);
         // Maybe own
         boolean own = (message.getUserId() == conf.getOwnMmsi());
         // Convert to VDO or VDM
@@ -105,25 +120,58 @@ public class Transponder extends Thread {
                 sendBinAck(msg6);
             }
         }
-        // Save own position
-        if (own && message instanceof IVesselPositionMessage) {
-            // TODO set own message in resender
+
+        String strMessage = buf.toString();
+
+        // Handle position
+        if (message instanceof IVesselPositionMessage) {
+            IVesselPositionMessage posMsg = (IVesselPositionMessage) message;
+            if (own) {
+                // Save own position message
+                ownMessage.setOwnMessage(strMessage);
+                // Save own position if valid
+                if (posMsg.isPositionValid()) {
+                    synchronized (this) {
+                        ownPos = posMsg.getPos().getGeoLocation();
+                    }
+                }                
+            } else {
+                // Is this message valid and within radius
+                if (!posMsg.isPositionValid()) {
+                    return;                    
+                }
+                synchronized (this) {
+                    Position pos = posMsg.getPos().getGeoLocation();
+                    if (ownPos == null || pos.rhumbLineDistanceTo(ownPos) > conf.getReceiveRadius()) {
+                        return;
+                    }
+                }
+            }
         }
 
-        out.print(buf.toString());
-        out.flush();
+        send(strMessage);
+    }
+
+    /**
+     * Send message to client
+     * @param str
+     */
+    public void send(String str) {
+        if (clientConnected) {
+            out.print(str);
+            out.flush();
+        }
     }
 
     @Override
     public void start() {
         serverConnection.start();
-
-        // Start own message re sender
-
+        ownMessage.start();
         super.start();
     }
 
     public void shutdown() {
+        ownMessage.interrupt();
         this.interrupt();
         serverConnection.shutdown();
         if (socket != null) {
@@ -143,16 +191,10 @@ public class Transponder extends Thread {
         }
     }
 
-    public void reconfigure(TransponderConfiguration conf) {
-        // Maybe todo
-    }
-
     @Override
     public void run() {
         while (true) {
-
-            socket = null;
-            out = null;
+            clientConnected = false;
 
             // Wait for connections
             LOG.info("Waiting for connection on port " + conf.getPort());
@@ -168,6 +210,7 @@ public class Transponder extends Thread {
 
             try {
                 out = new PrintWriter(socket.getOutputStream());
+                clientConnected = true;
                 readFromAI();
             } catch (IOException e) {
             }
@@ -249,7 +292,7 @@ public class Transponder extends Thread {
         LOG.info("Sending VDM to network: " + packet.getStringMessage());
         serverConnection.send(packet);
     }
-    
+
     private void handleBbm() {
         LOG.info("Reveived complete BBM");
         abk = new Abk();
@@ -269,7 +312,6 @@ public class Transponder extends Thread {
 
         sendAbk();
     }
-
 
     private void handleAbm() {
         LOG.info("Reveived complete ABM");
@@ -295,10 +337,7 @@ public class Transponder extends Thread {
     private void sendAbk() {
         String encoded = abk.getEncoded() + "\r\n";
         LOG.info("Sending ABK: " + encoded);
-        if (out != null) {
-            out.print(encoded);
-            out.flush();
-        }
+        send(encoded);
     }
 
 }
