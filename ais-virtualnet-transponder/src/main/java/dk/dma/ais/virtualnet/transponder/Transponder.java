@@ -59,6 +59,7 @@ public class Transponder extends Thread {
     private Abm abm = new Abm();
     private Bbm bbm = new Bbm();
     private Abk abk = new Abk();
+    private int sequence = 0;
 
     public Transponder(TransponderConfiguration conf) throws IOException {
         this.conf = conf;
@@ -110,29 +111,12 @@ public class Transponder extends Thread {
         }
 
         out.print(buf.toString());
-    }
-
-    private void sendBinAck(AisMessage6 msg6) {
-        AisMessage7 msg7 = new AisMessage7();
-        msg7.setUserId(conf.getOwnMmsi());
-        msg7.setDest1(msg6.getUserId());
-        msg7.setSeq1(msg6.getSeqNum());
-        LOG.info("Sending binary acknowledge: " + msg7);
-        String[] sentences;
-        try {
-            sentences = Vdm.createSentences(msg7, msg6.getSeqNum());
-        } catch (SixbitException e) {
-            LOG.error("Failed to make binary acknowledge", e);
-            return;
-        }
-        AisPacket packet = AisPacket.from(StringUtils.join(sentences, "\r\n"), System.currentTimeMillis());
-        LOG.info("Sending encoded binary acknowledge: " + packet.getStringMessage());
-        serverConnection.send(packet);
+        out.flush();
     }
 
     @Override
     public void start() {
-        //serverConnection.start();
+        serverConnection.start();
 
         // Start own message re sender
 
@@ -165,34 +149,37 @@ public class Transponder extends Thread {
 
     @Override
     public void run() {
-        socket = null;
-        out = null;
+        while (true) {
 
-        // Wait for connections
-        LOG.info("Transponder listening on port " + conf.getPort());
-        try {
-            socket = serverSocket.accept();
-            LOG.info("Client connected");
-        } catch (IOException e) {
-            if (!isInterrupted()) {
-                LOG.error("Failed to accept client connection", e);
+            socket = null;
+            out = null;
+
+            // Wait for connections
+            LOG.info("Waiting for connection on port " + conf.getPort());
+            try {
+                socket = serverSocket.accept();
+                LOG.info("Client connected");
+            } catch (IOException e) {
+                if (!isInterrupted()) {
+                    LOG.error("Failed to accept client connection", e);
+                }
+                return;
             }
-            return;
-        }
-                
 
-        try {
-            out = new PrintWriter(socket.getOutputStream());
-            readFromAI();
-        } catch (IOException e) {
+            try {
+                out = new PrintWriter(socket.getOutputStream());
+                readFromAI();
+            } catch (IOException e) {
+            }
+
+            try {
+                socket.close();
+            } catch (IOException e1) {
+            }
+
             LOG.info("Lost connection to client");
-        }
 
-        try {
-            socket.close();
-        } catch (IOException e1) {
         }
-
     }
 
     private void readFromAI() throws IOException {
@@ -237,6 +224,32 @@ public class Transponder extends Thread {
 
     }
 
+    private void sendBinAck(AisMessage6 msg6) {
+        AisMessage7 msg7 = new AisMessage7();
+        msg7.setUserId(conf.getOwnMmsi());
+        msg7.setDest1(msg6.getUserId());
+        msg7.setSeq1(msg6.getSeqNum());
+        LOG.info("Sending binary acknowledge: " + msg7);
+        sendMessage(msg7, msg6.getSeqNum());
+    }
+
+    private void sendMessage(AisMessage message, Integer seq) {
+        if (seq == null) {
+            seq = sequence;
+            sequence = (sequence + 1) % 4;
+        }
+        String[] sentences;
+        try {
+            sentences = Vdm.createSentences(message, seq);
+        } catch (SixbitException e) {
+            LOG.error("Failed to encode message: " + message, e);
+            return;
+        }
+        AisPacket packet = AisPacket.from(StringUtils.join(sentences, "\r\n"), System.currentTimeMillis());
+        LOG.info("Sending VDM to network: " + packet.getStringMessage());
+        serverConnection.send(packet);
+    }
+    
     private void handleBbm() {
         LOG.info("Reveived complete BBM");
         abk = new Abk();
@@ -244,12 +257,9 @@ public class Transponder extends Thread {
         abk.setMsgId(bbm.getMsgId());
         abk.setSequence(bbm.getSequence());
 
-        // Get AisMessage from Bbm
+        // Send AisMessage from Bbm
         try {
-            Vdm vdm = bbm.makeVdm(conf.getOwnMmsi(), 0);
-            AisPacket packet = AisPacket.from(vdm.getEncoded(), System.currentTimeMillis());
-            LOG.info("Sending VDM to network: " + packet.getStringMessage());
-            serverConnection.send(packet);
+            sendMessage(bbm.getAisMessage(conf.getOwnMmsi(), 0), bbm.getSequence());
             abk.setResult(Abk.Result.BROADCAST_SENT);
         } catch (Exception e) {
             LOG.info("Error decoding BBM: " + e.getMessage());
@@ -259,6 +269,7 @@ public class Transponder extends Thread {
 
         sendAbk();
     }
+
 
     private void handleAbm() {
         LOG.info("Reveived complete ABM");
@@ -270,10 +281,7 @@ public class Transponder extends Thread {
 
         // Get AisMessage from Abm
         try {
-            Vdm vdm = abm.makeVdm(conf.getOwnMmsi(), 0, 0);
-            AisPacket packet = AisPacket.from(vdm.getEncoded(), System.currentTimeMillis());
-            LOG.info("Sending VDM to network: " + packet.getStringMessage());
-            serverConnection.send(packet);
+            sendMessage(abm.getAisMessage(conf.getOwnMmsi(), 0, 0), abm.getSequence());
             abk.setResult(Abk.Result.ADDRESSED_SUCCESS);
         } catch (Exception e) {
             LOG.info("Error decoding ABM: " + e.getMessage());
@@ -289,6 +297,7 @@ public class Transponder extends Thread {
         LOG.info("Sending ABK: " + encoded);
         if (out != null) {
             out.print(encoded);
+            out.flush();
         }
     }
 

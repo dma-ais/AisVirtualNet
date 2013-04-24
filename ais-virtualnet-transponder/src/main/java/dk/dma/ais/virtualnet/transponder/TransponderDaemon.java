@@ -39,7 +39,17 @@ public class TransponderDaemon extends AbstractDaemon {
     Transponder transponder;
 
     @Override
-    protected void runDaemon(Injector injector) throws Exception {
+    protected void runDaemon(Injector injector) throws Exception {       
+        // Set default exception handler
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                LOG.error("Uncaught exception in thread " + t.getClass().getCanonicalName() + ": " + e.getMessage(), t);
+                shutdown();
+                System.exit(-1);
+            }
+        });
+
         // Load configuration
         TransponderConfiguration conf;
         try {
@@ -48,7 +58,7 @@ public class TransponderDaemon extends AbstractDaemon {
             LOG.error(e.getMessage());
             return;
         }
-        
+
         // Start transponder
         transponder = new Transponder(conf);
         transponder.start();
@@ -65,13 +75,6 @@ public class TransponderDaemon extends AbstractDaemon {
     }
 
     public static void main(String[] args) throws Exception {
-        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                LOG.error("Uncaught exception in thread " + t.getClass().getCanonicalName() + ": " + e.getMessage(), t);
-                System.exit(1);
-            }
-        });
         new TransponderDaemon().execute(args);
     }
 

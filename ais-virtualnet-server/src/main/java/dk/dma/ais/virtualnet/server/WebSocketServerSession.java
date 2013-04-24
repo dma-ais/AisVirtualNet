@@ -70,6 +70,7 @@ public class WebSocketServerSession extends WebSocketSession {
             LOG.error("Client sending messages without authentication");
             return;
         }
+        LOG.info("Received message from client:\n" + strPacket);
         server.distribute(AisPacket.from(strPacket, System.currentTimeMillis()));
     }
 
