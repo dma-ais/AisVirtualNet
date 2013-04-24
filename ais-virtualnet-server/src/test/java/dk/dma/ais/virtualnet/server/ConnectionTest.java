@@ -15,18 +15,19 @@
  */
 package dk.dma.ais.virtualnet.server;
 
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
-import dk.dma.ais.virtualnet.transponder.WebSocketClientSession;
+import dk.dma.ais.virtualnet.transponder.Transponder;
+import dk.dma.ais.virtualnet.transponder.TransponderConfiguration;
 
 public class ConnectionTest {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(ConnectionTest.class);
 
     private static final int TESTPORT = 14050;
 
@@ -43,30 +44,32 @@ public class ConnectionTest {
         // Make and start server instance
         server = new AisVirtualNetServer(conf);
         server.start();
-    }
-
-    @After
-    public void stop() {
-        server.shutdown();
+        LOG.info("AisVirtualNet server started");
+        
+        Thread.sleep(3000);
     }
 
     @Test
-    public void clientTest() throws Exception {
-        WebSocketClientSession clientSession = new WebSocketClientSession("ole","ole");
+    public void transponderTest() throws Exception {
+        TransponderConfiguration conf = new TransponderConfiguration();
+        conf.setOwnMmsi(219230000);
+        conf.setServerUrl("ws://localhost:" + TESTPORT);
+        conf.setUsername("ole");
+        Transponder transponder = new Transponder(conf);
+        LOG.info("Starting transponder");
+        transponder.start();
+        LOG.info("Transponder started");
         
-        // Make client and connect
-        WebSocketClient client = new WebSocketClient();
-        System.out.println("Starting client");
-        client.start();
-        System.out.println("Connecting");
-        client.connect(clientSession, new URI("ws://localhost:" + TESTPORT)).get();
-        System.out.println("Connecting, waiting for connection");
-        clientSession.getConnected().await(10, TimeUnit.SECONDS);
-        System.out.println("Connected");
+        transponder.join(3000);
+        LOG.info("Shutting down transponder");
+        transponder.shutdown();
+        LOG.info("Transponder shutdown");
+        Thread.sleep(3000);
         
-        
-        
-        Thread.sleep(5000);
+        LOG.info("Shutting down AisVirtualNet server");
+        server.shutdown();
+        Thread.sleep(3000);
+
     }
 
 }

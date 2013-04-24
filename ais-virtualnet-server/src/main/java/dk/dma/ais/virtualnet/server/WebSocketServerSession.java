@@ -23,6 +23,7 @@ import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.virtualnet.common.message.Message;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
+// TODO threadsafe?
 public class WebSocketServerSession extends WebSocketSession {
     
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);

@@ -15,11 +15,24 @@
  */
 package dk.dma.ais.virtualnet.transponder;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class TransponderConfiguration {
     
     private Integer ownMmsi;
     private int ownPosInterval = 5; // five seconds
     private int receiveRadius = 75000; // 75 km (approx 40 nm)
+    private int port = 8001;    
     private String serverUrl;
     private String username;
     private String password;
@@ -75,5 +88,28 @@ public class TransponderConfiguration {
     public void setReceiveRadius(int receiveRadius) {
         this.receiveRadius = receiveRadius;
     }
+    
+    public int getPort() {
+        return port;
+    }
+    
+    public void setPort(int port) {
+        this.port = port;
+    }
+    
+    public static void save(String filename, TransponderConfiguration conf) throws JAXBException, FileNotFoundException {
+        JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
+        Marshaller m = context.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+        m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+        m.marshal(conf, new FileOutputStream(new File(filename)));
+    }
+
+    public static TransponderConfiguration load(String filename) throws JAXBException, FileNotFoundException {
+        JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
+        Unmarshaller um = context.createUnmarshaller();
+        return (TransponderConfiguration) um.unmarshal(new FileInputStream(new File(filename)));
+    }
+
     
 }

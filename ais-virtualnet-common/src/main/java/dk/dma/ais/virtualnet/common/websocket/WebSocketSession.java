@@ -74,13 +74,11 @@ public abstract class WebSocketSession implements WebSocketListener {
 
     @Override
     public void onWebSocketError(Throwable t) {
-        LOG.error("Web socket error", t);
+        
     }
 
     @Override
     public void onWebSocketText(String message) {
-        LOG.info("Text message received: " + message);
-        
         // Try to deserialize into message
         Message msg = gson.fromJson(message, Message.class);
         // TODO handle exception
@@ -91,10 +89,10 @@ public abstract class WebSocketSession implements WebSocketListener {
         Session s = session;
         try {
             if (s != null) {
-                s.close(2, "Close requested");
+                s.close();
             }
         } catch (IOException e) {
-            LOG.error("Failed to close web socket", e);
+            LOG.error("Failed to close web socket: " + e.getMessage());
         }
     }
     
@@ -113,7 +111,6 @@ public abstract class WebSocketSession implements WebSocketListener {
     }
     
     private final void sendText(String text) {
-        LOG.info("Sending text: " + text);
         Session s = session;
         RemoteEndpoint r = s == null ? null : s.getRemote();
         if (r != null) {

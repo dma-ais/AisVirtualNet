@@ -5,3 +5,5 @@ target/
 .classpath
 server-test.xml
 log/
+ais-virtualnet-transponder/src/main/resources/transponder.xml
+

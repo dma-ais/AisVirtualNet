@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<transponderConfiguration>
+    <ownMmsi>219230000</ownMmsi>
+    <ownPosInterval>5</ownPosInterval>
+    <port>8001</port>
+    <receiveRadius>75000</receiveRadius>
+    <serverUrl>ws://localhost:8080/</serverUrl>
+    <username>ole</username>
+</transponderConfiguration>

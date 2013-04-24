@@ -3,24 +3,18 @@ package dk.dma.ais.virtualnet.transponder;
 import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.jetty.websocket.api.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.virtualnet.common.message.Message;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 public class WebSocketClientSession extends WebSocketSession {
     
-    private static final Logger LOG = LoggerFactory.getLogger(WebSocketClientSession.class);
-    
     private final CountDownLatch closed = new CountDownLatch(1);
     
-    private final String username;
-    private final String password;
+    private final ServerConnection connection;
     
-    public WebSocketClientSession(String username, String password) {
-        this.username = username;
-        this.password = password;
+    public WebSocketClientSession(ServerConnection connection) {
+        this.connection = connection;
     }
     
     @Override
@@ -28,8 +22,8 @@ public class WebSocketClientSession extends WebSocketSession {
         super.onWebSocketConnect(session);
         // Send credentials
         Message msg = new Message();
-        msg.setUsername(username);
-        msg.setPassword(password);
+        msg.setUsername(connection.getConf().getUsername());
+        msg.setPassword(connection.getConf().getPassword());
         sendMessage(msg);
     }
     
@@ -41,9 +35,7 @@ public class WebSocketClientSession extends WebSocketSession {
 
     @Override
     protected void handleMessage(Message message) {
-        LOG.info("Received message: " + message.getPacket());
-        
-        // TODO
+        connection.receive(message.getPacket());
     }
     
     public CountDownLatch getClosed() {

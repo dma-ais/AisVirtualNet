@@ -28,18 +28,20 @@ import dk.dma.ais.packet.AisPacket;
  * Class that maintains the connection to the server
  */
 public class ServerConnection extends Thread {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(ServerConnection.class);
-    
+
+    private final Transponder transponder;
     private final TransponderConfiguration conf;
-    
+
     private volatile WebSocketClientSession session;
     private volatile boolean connected;
-    
-    public ServerConnection(TransponderConfiguration conf) {
+
+    public ServerConnection(Transponder transponder, TransponderConfiguration conf) {
+        this.transponder = transponder;
         this.conf = conf;
     }
-    
+
     /**
      * Send packet to server
      */
@@ -48,20 +50,42 @@ public class ServerConnection extends Thread {
             session.sendPacket(packet);
         }
     }
-    
+
+    /**
+     * Receive message from the server
+     * 
+     * @param packet
+     */
+    public void receive(String packet) {
+        transponder.send(packet);
+
+    }
+
     public void shutdown() {
+        this.interrupt();
         if (session != null) {
             session.close();
         }
-        this.interrupt();
+        try {
+            this.join(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
-    
+
+    public TransponderConfiguration getConf() {
+        return conf;
+    }
+
     @Override
     public void run() {
         while (true) {
+            if (isInterrupted()) {
+                return;
+            }            
             connected = false;
             // Make session
-            session = new WebSocketClientSession(conf.getUsername(), conf.getPassword());
+            session = new WebSocketClientSession(this);
             // Make client and connect
             WebSocketClient client = new WebSocketClient();
             try {
@@ -74,14 +98,9 @@ public class ServerConnection extends Thread {
                     connected = true;
                 }
             } catch (Exception e) {
-                LOG.error("Failed to connect web socket", e);               
+                LOG.error("Failed to connect web socket: " + e.getMessage());
             }
-            
-            if (isInterrupted()) {
-                session.close();
-                return;
-            }
-            
+
             if (!connected) {
                 // Something went wrong, wait a while
                 try {
@@ -92,19 +111,19 @@ public class ServerConnection extends Thread {
                 }
                 continue;
             }
-            
+
             // Wait for disconnect
             try {
                 session.getClosed().await();
             } catch (InterruptedException e) {
                 session.close();
                 return;
-            }                        
+            }
             
-        }       
-        
-        
+            session.close();
+            
+        }
+
     }
-    
 
 }

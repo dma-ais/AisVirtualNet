@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.server;
+package dk.dma.ais.virtualnet.transponder;
 
 import java.io.FileNotFoundException;
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -26,56 +26,53 @@ import com.google.inject.Injector;
 
 import dk.dma.commons.app.AbstractDaemon;
 
-
 /**
- * AisVirtualNetServer server daemon
+ * Command line version of transponder
  */
-public class ServerDaemon extends AbstractDaemon {
-    
-    private static final Logger LOG = LoggerFactory.getLogger(ServerDaemon.class);
-    
-    @Parameter(names = "-file", description = "AisVirtualNetServer server configuration file")
-    String confFile = "server.xml";
-    
-    AisVirtualNetServer server;
-    
+public class TransponderDaemon extends AbstractDaemon {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TransponderDaemon.class);
+
+    @Parameter(names = "-file", description = "Transponder configuration file")
+    String confFile = "transponder.xml";
+
+    Transponder transponder;
+
     @Override
     protected void runDaemon(Injector injector) throws Exception {
-        LOG.info("Starting AisVirtualNetServer server with configuration: " + confFile);
-        
         // Load configuration
-        ServerConfiguration conf;
+        TransponderConfiguration conf;
         try {
-            conf = ServerConfiguration.load(confFile);
+            conf = TransponderConfiguration.load(confFile);
         } catch (FileNotFoundException e) {
             LOG.error(e.getMessage());
             return;
         }
         
-        // Start server
-        server = new AisVirtualNetServer(conf);
-        server.start();
-        
+        // Start transponder
+        transponder = new Transponder(conf);
+        transponder.start();
+        transponder.join();
     }
-    
+
     @Override
     protected void shutdown() {
         LOG.info("Shutting down");
-        if (server != null) {
-            server.shutdown();
+        if (transponder != null) {
+            transponder.shutdown();
         }
         super.shutdown();
     }
-    
+
     public static void main(String[] args) throws Exception {
-        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {            
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
                 LOG.error("Uncaught exception in thread " + t.getClass().getCanonicalName() + ": " + e.getMessage(), t);
                 System.exit(1);
             }
         });
-        new ServerDaemon().execute(args);
+        new TransponderDaemon().execute(args);
     }
 
 }
