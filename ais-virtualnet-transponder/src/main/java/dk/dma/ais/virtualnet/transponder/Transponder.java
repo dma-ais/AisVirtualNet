@@ -42,7 +42,7 @@ import dk.dma.ais.sentence.Bbm;
 import dk.dma.ais.sentence.Sentence;
 import dk.dma.ais.sentence.SentenceException;
 import dk.dma.ais.sentence.Vdm;
-import dk.dma.ais.virtualnet.transponder.table.TargetTable;
+import dk.dma.ais.transform.VdmVdoTransformer;
 import dk.dma.enav.model.geometry.Position;
 
 /**
@@ -51,13 +51,13 @@ import dk.dma.enav.model.geometry.Position;
 @ThreadSafe
 public class Transponder extends Thread {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Transponder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Transponder.class); 
 
     private final TransponderConfiguration conf;
     private final ServerConnection serverConnection;
     private final ServerSocket serverSocket;
     private final TransponderOwnMessage ownMessage;
-    private final TargetTable targetTable;
+    private final VdmVdoTransformer vdoTransformer;
 
     private volatile boolean clientConnected;
     private volatile Socket socket;
@@ -74,13 +74,9 @@ public class Transponder extends Thread {
         serverConnection = new ServerConnection(this, conf);
         serverSocket = new ServerSocket(conf.getPort());
         ownMessage = new TransponderOwnMessage(this, conf.getOwnPosInterval());
-        targetTable = new TargetTable();
+        vdoTransformer = new VdmVdoTransformer(conf.getOwnMmsi());
     }
     
-    public TargetTable getTargetTable() {
-        return targetTable;
-    }
-
     /**
      * Data received from network
      * 
@@ -91,7 +87,7 @@ public class Transponder extends Thread {
             return;
         }
         // Make packet and get ais message
-        AisPacket packet = AisPacket.from(strPacket, System.currentTimeMillis());
+        AisPacket packet = AisPacket.from(strPacket);
         AisMessage message;
         try {
             message = packet.getAisMessage();
@@ -99,19 +95,13 @@ public class Transponder extends Thread {
             LOG.info("Failed to parse message: " + e.getMessage());
             return;
         }
-        // Update target table
-        targetTable.update(message);
         // Maybe own
         boolean own = (message.getUserId() == conf.getOwnMmsi());
         // Convert to VDO or VDM
-        StringBuilder buf = new StringBuilder();
-        for (String sentence : message.getVdm().getOrgLines()) {
-            try {
-                buf.append(Sentence.convert(sentence, "AI", (own) ? "VDO" : "VDM") + "\r\n");
-            } catch (SentenceException e) {
-                LOG.error("Failed to convert sentence " + sentence);
-                return;
-            }
+        packet = vdoTransformer.transform(packet);
+        if (packet == null) {
+            LOG.error("Failed to convert packet " + strPacket);
+            return;
         }
         // Maybe the transponder needs to send a binary acknowledge back to the network
         if (message.getMsgId() == 6) {
@@ -121,14 +111,13 @@ public class Transponder extends Thread {
             }
         }
 
-        String strMessage = buf.toString();
 
         // Handle position
         if (message instanceof IVesselPositionMessage) {
             IVesselPositionMessage posMsg = (IVesselPositionMessage) message;
             if (own) {
                 // Save own position message
-                ownMessage.setOwnMessage(strMessage);
+                ownMessage.setOwnMessage(packet);
                 // Save own position if valid
                 if (posMsg.isPositionValid()) {
                     synchronized (this) {
@@ -149,7 +138,7 @@ public class Transponder extends Thread {
             }
         }
 
-        send(strMessage);
+        send(packet.getStringMessage());
     }
 
     /**
@@ -158,7 +147,7 @@ public class Transponder extends Thread {
      */
     public void send(String str) {
         if (clientConnected) {
-            out.print(str);
+            out.print(str + "\r\n");
             out.flush();
         }
     }
@@ -288,7 +277,7 @@ public class Transponder extends Thread {
             LOG.error("Failed to encode message: " + message, e);
             return;
         }
-        AisPacket packet = AisPacket.from(StringUtils.join(sentences, "\r\n"), System.currentTimeMillis());
+        AisPacket packet = AisPacket.from(StringUtils.join(sentences, "\r\n"));
         LOG.info("Sending VDM to network: " + packet.getStringMessage());
         serverConnection.send(packet);
     }

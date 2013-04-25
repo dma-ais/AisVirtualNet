@@ -24,10 +24,8 @@ import org.junit.Test;
 
 import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
-import dk.dma.ais.configuration.bus.provider.TcpClientProviderConfiguration;
-import dk.dma.ais.configuration.filter.TaggingFilterConfiguration;
-import dk.dma.ais.configuration.transform.PacketTaggingConfiguration;
-import dk.dma.ais.virtualnet.server.ServerConfiguration;
+import dk.dma.ais.configuration.bus.provider.RepeatingFileReaderProviderConfiguration;
+import dk.dma.ais.configuration.transform.ReplayTransformConfiguration;
 
 public class ConfigurationTest {
     
@@ -38,18 +36,18 @@ public class ConfigurationTest {
         AisBusConfiguration aisBusConf = new AisBusConfiguration();
         conf.setAisbusConfiguration(aisBusConf);
         
-        // Provider
-        TcpClientProviderConfiguration reader = new TcpClientProviderConfiguration();
-        reader.getHostPort().add("ais163.sealan.dk:65262");
+        // Repeating file provider with replay
+        RepeatingFileReaderProviderConfiguration reader = new RepeatingFileReaderProviderConfiguration();
+        reader.setFilename("src/test/resources/ais.txt");
+        reader.getTransformers().add(new ReplayTransformConfiguration());        
         aisBusConf.getProviders().add(reader);
         
         // Only use a single base station
-        TaggingFilterConfiguration tagFilterConf = new TaggingFilterConfiguration();
-        PacketTaggingConfiguration tagConf = new PacketTaggingConfiguration();
-        tagConf.setSourceBs(2190047);
-        tagFilterConf.setFilterTagging(tagConf);
-        aisBusConf.getFilters().add(tagFilterConf);
-        
+//        TaggingFilterConfiguration tagFilterConf = new TaggingFilterConfiguration();
+//        PacketTaggingConfiguration tagConf = new PacketTaggingConfiguration();
+//        tagConf.setSourceBs(2190047);
+//        tagFilterConf.setFilterTagging(tagConf);
+//        aisBusConf.getFilters().add(tagFilterConf);        
         
         ServerConfiguration.save(filename, conf);
         

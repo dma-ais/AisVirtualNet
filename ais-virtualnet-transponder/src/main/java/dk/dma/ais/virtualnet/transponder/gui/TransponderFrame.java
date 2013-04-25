@@ -51,7 +51,9 @@ public class TransponderFrame extends JFrame implements ActionListener {
         setSize(new Dimension(500, 300));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("AisVirtualNet transponder");
-        setLocationRelativeTo(null);        
+        setLocationRelativeTo(null); 
+        
+        
 
         loadConf();
         saveConf();

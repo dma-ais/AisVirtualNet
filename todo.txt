@@ -4,14 +4,6 @@ TODO
 Step 1:
 -------------------------
 
-+ FileProvider with repeat functionality
-
-+ Make sample with replay and small AIS dump
-
-+ Transformer VDM/VDO -> VDM/VDO based on own mmsi
-	Use instead of working directly with AisMessage
-	Send whole packets to client
-
 + Design and implement GUI
 	Start with simple layout just to focus on functionality 
 

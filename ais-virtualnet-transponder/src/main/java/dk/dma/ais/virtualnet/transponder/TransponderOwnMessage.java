@@ -15,6 +15,7 @@
  */
 package dk.dma.ais.virtualnet.transponder;
 
+import dk.dma.ais.packet.AisPacket;
 import net.jcip.annotations.ThreadSafe;
 
 /**
@@ -26,7 +27,7 @@ public class TransponderOwnMessage extends Thread {
     private static final long MESSAGE_MAX_AGE = 20 * 60 * 1000; // 20 minutes
 
     private Long lastReceived;
-    private String ownMessage;
+    private AisPacket ownPacket;
     private final int forceInterval;
     private final Transponder transponder;
 
@@ -56,7 +57,7 @@ public class TransponderOwnMessage extends Thread {
     private synchronized void reSend() {
         long elapsed = 0L;
 
-        if (ownMessage == null) {
+        if (ownPacket == null) {
             return;
         }
         // Determine last send elapsed
@@ -68,12 +69,12 @@ public class TransponderOwnMessage extends Thread {
         }
         // Send if not too old
         if (elapsed < MESSAGE_MAX_AGE) {
-            transponder.send(ownMessage);
+            transponder.send(ownPacket.getStringMessage());
         }
     }
 
-    public synchronized void setOwnMessage(String ownMessage) {
-        this.ownMessage = ownMessage;
+    public synchronized void setOwnMessage(AisPacket ownPacket) {
+        this.ownPacket = ownPacket;
         this.lastReceived = System.currentTimeMillis();
     }
 

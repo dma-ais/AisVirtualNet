@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <serverConfiguration>
 	<port>8080</port>
-	<aisbus>
-		<provider xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="tcpClientProviderConfiguration">
-			<hostPort>ais163.sealan.dk:65262</hostPort>
-		</provider>
-		<filter xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="taggingFilterConfiguration">
-			<filterTagging>
-				<sourceBs>2190047</sourceBs>
-			</filterTagging>
-		</filter>		
+	<aisbus>		
+        <provider xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="repeatingFileReaderProviderConfiguration">            
+            <filename>src/main/resources/ais.txt.gz</filename>
+            <gzip>true</gzip>
+            <transformer xsi:type="replayTransformConfiguration" />
+        </provider>
 	</aisbus>
 </serverConfiguration>

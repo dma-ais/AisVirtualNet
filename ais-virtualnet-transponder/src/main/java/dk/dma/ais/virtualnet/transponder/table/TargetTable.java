@@ -42,6 +42,7 @@ public class TargetTable {
         }
         TargetTableEntry entry = new TargetTableEntry();
         entry = targets.putIfAbsent(message.getUserId(), entry);
+        // TODO what is returned (null?)
         entry.update(message);
     }
     
