@@ -4,6 +4,7 @@
     <ownPosInterval>5</ownPosInterval>
     <port>8001</port>
     <receiveRadius>10000</receiveRadius>
-    <serverUrl>ws://localhost:8080/</serverUrl>
+    <serverHost>localhost</serverHost>
+    <serverPort>8080</serverPort>
     <username>ole</username>
 </transponderConfiguration>

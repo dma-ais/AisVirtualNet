@@ -28,25 +28,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class TransponderConfiguration {
-    
+
     private Integer ownMmsi;
     private int ownPosInterval = 5; // five seconds
     private int receiveRadius = 75000; // 75 km (approx 40 nm)
-    private int port = 8001;    
-    private String serverUrl;
+    private int port = 8001;
+    private String serverHost;
+    private int serverPort;
     private String username;
     private String password;
-    
+
     public TransponderConfiguration() {
-        
-    }
 
-    public String getServerUrl() {
-        return serverUrl;
-    }
-
-    public void setServerUrl(String serverUrl) {
-        this.serverUrl = serverUrl;
     }
 
     public String getUsername() {
@@ -88,15 +81,35 @@ public class TransponderConfiguration {
     public void setReceiveRadius(int receiveRadius) {
         this.receiveRadius = receiveRadius;
     }
-    
+
     public int getPort() {
         return port;
     }
-    
+
     public void setPort(int port) {
         this.port = port;
     }
+
+    public String getServerHost() {
+        return serverHost;
+    }
+
+    public void setServerHost(String serverHost) {
+        this.serverHost = serverHost;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
     
+    public String createServerUrl() {
+        return "ws://" + serverHost + ":" + serverPort + "/ws/";
+    }
+
     public static void save(String filename, TransponderConfiguration conf) throws JAXBException, FileNotFoundException {
         JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
         Marshaller m = context.createMarshaller();
@@ -111,5 +124,4 @@ public class TransponderConfiguration {
         return (TransponderConfiguration) um.unmarshal(new FileInputStream(new File(filename)));
     }
 
-    
 }

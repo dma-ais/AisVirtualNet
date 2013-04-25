@@ -88,9 +88,10 @@ public class ServerConnection extends Thread {
             session = new WebSocketClientSession(this);
             // Make client and connect
             WebSocketClient client = new WebSocketClient();
+            String serverUrl = conf.createServerUrl();
             try {
                 client.start();
-                client.connect(session, new URI(conf.getServerUrl())).get();
+                client.connect(session, new URI(serverUrl)).get();
                 if (!session.getConnected().await(10, TimeUnit.SECONDS)) {
                     LOG.error("Timeout waiting for connection");
                     session.close();
@@ -98,7 +99,7 @@ public class ServerConnection extends Thread {
                     connected = true;
                 }
             } catch (Exception e) {
-                LOG.error("Failed to connect web socket: " + e.getMessage());
+                LOG.error("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
             }
 
             if (!connected) {

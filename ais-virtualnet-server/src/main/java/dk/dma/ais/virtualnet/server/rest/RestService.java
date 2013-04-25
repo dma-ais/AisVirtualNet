@@ -13,28 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.transponder;
+package dk.dma.ais.virtualnet.server.rest;
 
-import java.io.FileNotFoundException;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-import javax.xml.bind.JAXBException;
+/**
+ * JAX-RS rest services
+ */
+@Path("/")
+public class RestService {
 
-import org.junit.Test;
-
-public class ConfigurationTest {
-    
-    @Test
-    public void makeConfiguration() throws FileNotFoundException, JAXBException {
-        String filename = "src/main/resources/transponder.xml";
-        TransponderConfiguration conf = new TransponderConfiguration();
-        conf.setOwnMmsi(219230000);
-        conf.setServerHost("localhost");
-        conf.setServerPort(8080);
-        conf.setUsername("anonymous");
-        conf.setPort(8001);
-        
-        TransponderConfiguration.save(filename, conf);        
-        conf = TransponderConfiguration.load(filename);
+    @GET
+    @Path("test")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String test() {
+        return "Hello world";
     }
 
 }

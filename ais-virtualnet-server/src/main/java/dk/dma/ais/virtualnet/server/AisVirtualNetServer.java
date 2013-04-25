@@ -21,8 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.jcip.annotations.ThreadSafe;
 
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.eclipse.jetty.websocket.api.UpgradeResponse;
 import org.eclipse.jetty.websocket.server.WebSocketHandler;
@@ -72,8 +76,20 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
                     }
                 });
             }
-        };
-        server.setHandler(wsHandler);
+        };        
+        ContextHandler wsContext = new ContextHandler();
+        wsContext.setContextPath("/ws");
+        wsContext.setHandler(wsHandler);
+        // Create and register web app context
+        WebAppContext webappContext = new WebAppContext();
+        webappContext.setServer(server);
+        webappContext.setContextPath("/");
+        webappContext.setWar("web");
+        
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
+        contexts.setHandlers(new Handler[] { wsContext, webappContext });
+        server.setHandler(contexts);
+        
         // Create AisBus
         aisBus = conf.getAisbusConfiguration().getInstance();
         // Create distributor consumer and add to aisBus

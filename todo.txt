@@ -11,6 +11,7 @@ Step 2:
 -------------------------
 
 + Server:Rest API with services to get list of targets
+	(Look into Jersey and how to inject reference to other objects)
 	List of targets (Move target table to common and allow sharing through API)
 	Reserve target
 	Release target
