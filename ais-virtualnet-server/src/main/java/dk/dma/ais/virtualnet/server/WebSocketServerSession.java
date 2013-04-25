@@ -29,7 +29,7 @@ public class WebSocketServerSession extends WebSocketSession {
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
     
     private final AisVirtualNetServer server;
-    private volatile boolean authenticated = false; 
+    private volatile boolean authenticated; 
     
     public WebSocketServerSession(AisVirtualNetServer server) {
         this.server = server;

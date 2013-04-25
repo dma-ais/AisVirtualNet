@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.transponder.table;
+package dk.dma.ais.virtualnet.common.table;
 
 import java.util.Collections;
 import java.util.Map;
@@ -23,6 +23,7 @@ import net.jcip.annotations.ThreadSafe;
 import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisStaticCommon;
 import dk.dma.ais.message.IVesselPositionMessage;
+import dk.dma.ais.packet.AisPacket;
 
 /**
  * Simple table of AIS vessel targets
@@ -36,13 +37,19 @@ public class TargetTable {
         
     }
     
-    public void update(AisMessage message) {
+    public void update(AisPacket packet) {
+        AisMessage message = packet.tryGetAisMessage();
+        if (message == null) {
+            return;
+        }
         if (!(message instanceof IVesselPositionMessage) && !(message instanceof AisStaticCommon)) {
             return;
         }
-        TargetTableEntry entry = new TargetTableEntry();
-        entry = targets.putIfAbsent(message.getUserId(), entry);
-        // TODO what is returned (null?)
+        TargetTableEntry newEntry = new TargetTableEntry();
+        TargetTableEntry entry = targets.putIfAbsent(message.getUserId(), newEntry);
+        if (entry == null) {
+            entry = newEntry;
+        }
         entry.update(message);
     }
     

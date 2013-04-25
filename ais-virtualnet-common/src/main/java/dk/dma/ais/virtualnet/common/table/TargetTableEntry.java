@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.transponder.table;
+package dk.dma.ais.virtualnet.common.table;
 
 import net.jcip.annotations.ThreadSafe;
 import dk.dma.ais.message.AisMessage;

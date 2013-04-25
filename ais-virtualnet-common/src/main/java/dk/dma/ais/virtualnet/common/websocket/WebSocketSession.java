@@ -110,7 +110,7 @@ public abstract class WebSocketSession implements WebSocketListener {
         sendText(gson.toJson(message));
     }
     
-    private final void sendText(String text) {
+    private void sendText(String text) {
         Session s = session;
         RemoteEndpoint r = s == null ? null : s.getRemote();
         if (r != null) {

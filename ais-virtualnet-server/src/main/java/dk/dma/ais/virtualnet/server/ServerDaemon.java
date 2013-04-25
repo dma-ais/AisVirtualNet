@@ -1,4 +1,4 @@
-/* Copyright (c) 2011 Danish Maritime Authority
+    /* Copyright (c) 2011 Danish Maritime Authority
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,7 @@ public class ServerDaemon extends AbstractDaemon {
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {            
             @Override
             public void uncaughtException(Thread t, Throwable e) {
-                LOG.error("Uncaught exception in thread " + t.getClass().getCanonicalName() + ": " + e.getMessage(), t);
+                LOG.error("Uncaught exception in thread " + t.getClass().getCanonicalName() + ": " + e.getMessage(), e);
                 System.exit(1);
             }
         });

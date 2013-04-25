@@ -65,7 +65,7 @@ public class Transponder extends Thread {
     private Abm abm = new Abm();
     private Bbm bbm = new Bbm();
     private Abk abk = new Abk();
-    private int sequence = 0;
+    private int sequence;
     @GuardedBy("this")
     private Position ownPos;
 
@@ -96,7 +96,7 @@ public class Transponder extends Thread {
             return;
         }
         // Maybe own
-        boolean own = (message.getUserId() == conf.getOwnMmsi());
+        boolean own = message.getUserId() == conf.getOwnMmsi();
         // Convert to VDO or VDM
         packet = vdoTransformer.transform(packet);
         if (packet == null) {

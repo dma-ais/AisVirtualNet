@@ -35,6 +35,7 @@ import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.bus.provider.CollectorProvider;
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.virtualnet.common.table.TargetTable;
 import dk.dma.enav.util.function.Consumer;
 
 /**
@@ -48,6 +49,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     private final AisBus aisBus;
     private final Server server;
     private final CollectorProvider collector = new CollectorProvider();
+    private final TargetTable targetTable = new TargetTable();
     
     /**
      * Connected clients
@@ -89,6 +91,8 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
      */
     @Override
     public void accept(AisPacket packet) {
+        // Maintain target table
+        targetTable.update(packet);
         // Distribute packet to clients
         for (WebSocketServerSession client : clients) {
             client.sendPacket(packet);
@@ -112,7 +116,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     public boolean authenticate(String username, String password) {
         LOG.info("Authenticating username: " + username + " password: " + password);
         // TODO implement
-        return (username.equals("ole"));
+        return username.equals("ole");
     }
 
     /**
