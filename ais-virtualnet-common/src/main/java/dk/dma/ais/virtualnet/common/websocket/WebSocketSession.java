@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 import dk.dma.ais.packet.AisPacket;
-import dk.dma.ais.virtualnet.common.message.Message;
+import dk.dma.ais.virtualnet.common.message.WsMessage;
 
 public abstract class WebSocketSession implements WebSocketListener {
     
@@ -46,7 +46,7 @@ public abstract class WebSocketSession implements WebSocketListener {
     /**
      * Method to handle incoming messages
      */
-    protected abstract void handleMessage(Message message);
+    protected abstract void handleMessage(WsMessage wsMessage);
     
     @Override
     public void onWebSocketConnect(Session session) {
@@ -80,7 +80,7 @@ public abstract class WebSocketSession implements WebSocketListener {
     @Override
     public void onWebSocketText(String message) {
         // Try to deserialize into message
-        Message msg = gson.fromJson(message, Message.class);
+        WsMessage msg = gson.fromJson(message, WsMessage.class);
         // TODO handle exception
         handleMessage(msg);        
     }
@@ -97,17 +97,17 @@ public abstract class WebSocketSession implements WebSocketListener {
     }
     
     public void sendPacket(AisPacket packet) {
-        sendMessage(new Message(packet));
+        sendMessage(new WsMessage(packet));
     }
     
     public void sendPacket(String packet) {
-        Message message = new Message();
-        message.setPacket(packet);
-        sendMessage(message);
+        WsMessage wsMessage = new WsMessage();
+        wsMessage.setPacket(packet);
+        sendMessage(wsMessage);
     }
     
-    protected final void sendMessage(Message message) {
-        sendText(gson.toJson(message));
+    protected final void sendMessage(WsMessage wsMessage) {
+        sendText(gson.toJson(wsMessage));
     }
     
     private void sendText(String text) {

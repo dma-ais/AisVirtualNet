@@ -19,19 +19,18 @@ import dk.dma.ais.packet.AisPacket;
 
 /**
  * Message class for messages sent between virtual transponder and virtual AIS 
- * network 
+ * network over websocket connection
  */
-public class Message {
+public class WsMessage {
     
     private String packet;
-    private String username;
-    private String password;
+    private String authToken;
     
-    public Message() {
+    public WsMessage() {
         
     }
     
-    public Message(AisPacket packet) {
+    public WsMessage(AisPacket packet) {
         this.packet = packet.getStringMessage();
     }
     
@@ -42,25 +41,13 @@ public class Message {
     public void setPacket(String packet) {
         this.packet = packet;
     }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    
+    public String getAuthToken() {
+        return authToken;
     }
     
-    public boolean hasCredentials() {
-        return this.username != null;
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
     }
-    
+
 }

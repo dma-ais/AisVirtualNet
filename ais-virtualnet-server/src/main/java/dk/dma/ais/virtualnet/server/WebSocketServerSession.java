@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.packet.AisPacket;
-import dk.dma.ais.virtualnet.common.message.Message;
+import dk.dma.ais.virtualnet.common.message.WsMessage;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 // TODO threadsafe?
@@ -56,13 +56,13 @@ public class WebSocketServerSession extends WebSocketSession {
     }
     
     @Override
-    protected void handleMessage(Message message) {
-        // Maybe message has credentials
-        if (message.hasCredentials()) {
-            authenticated = server.authenticate(message.getUsername(), message.getPassword());
+    protected void handleMessage(WsMessage wsMessage) {
+        // Maybe message a token
+        if (wsMessage.getAuthToken() != null) {
+            authenticated = server.checkToken(wsMessage.getAuthToken());
             LOG.info("Authentication result: " + authenticated);
         }
-        String strPacket = message.getPacket();
+        String strPacket = wsMessage.getPacket();
         if (strPacket == null) {
             return;
         }

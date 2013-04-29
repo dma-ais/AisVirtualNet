@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.jetty.websocket.api.Session;
 
-import dk.dma.ais.virtualnet.common.message.Message;
+import dk.dma.ais.virtualnet.common.message.WsMessage;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 public class WebSocketClientSession extends WebSocketSession {
@@ -36,9 +36,8 @@ public class WebSocketClientSession extends WebSocketSession {
     public void onWebSocketConnect(Session session) {        
         super.onWebSocketConnect(session);
         // Send credentials
-        Message msg = new Message();
-        msg.setUsername(connection.getConf().getUsername());
-        msg.setPassword(connection.getConf().getPassword());
+        WsMessage msg = new WsMessage();
+        msg.setAuthToken("TOKEN");
         sendMessage(msg);
     }
     
@@ -49,8 +48,8 @@ public class WebSocketClientSession extends WebSocketSession {
     }
 
     @Override
-    protected void handleMessage(Message message) {
-        connection.receive(message.getPacket());
+    protected void handleMessage(WsMessage wsMessage) {
+        connection.receive(wsMessage.getPacket());
     }
     
     public CountDownLatch getClosed() {

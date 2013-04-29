@@ -18,19 +18,40 @@ package dk.dma.ais.virtualnet.server.rest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import dk.dma.ais.virtualnet.common.message.AuthenticationReplyMessage;
+import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
+import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
 
 /**
  * JAX-RS rest services
  */
 @Path("/")
 public class RestService {
+    
+    @Context
+    private AisVirtualNetServer server;
 
     @GET
-    @Path("test")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String test() {
-        return "Hello world";
+    @Path("target_table")
+    @Produces(MediaType.APPLICATION_JSON)
+    public TargetTableMessage getTargetTable() {
+        return server.getTargetTable().getTargetTableMessage();
     }
+    
+    @GET
+    @Path("authenticate")
+    @Produces(MediaType.APPLICATION_JSON)
+    public AuthenticationReplyMessage authenticate(@QueryParam("username") String username, @QueryParam("password") String password) {
+        // TODO authenticate
+        
+        AuthenticationReplyMessage reply = new AuthenticationReplyMessage();
+        reply.setAuthToken("TOKEN");
+        return reply;
+    }
+    
 
 }

@@ -40,6 +40,7 @@ import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.bus.provider.CollectorProvider;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.virtualnet.common.table.TargetTable;
+import dk.dma.ais.virtualnet.server.rest.AisVirtualNetServerProvider;
 import dk.dma.enav.util.function.Consumer;
 
 /**
@@ -100,6 +101,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         // Initialize collector and register in aisbus        
         collector.init();
         aisBus.registerProvider(collector);
+        
     }
     
     /**
@@ -124,18 +126,6 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     }
     
     /**
-     * Method to authenticate a user
-     * @param username
-     * @param password
-     * @return 
-     */
-    public boolean authenticate(String username, String password) {
-        LOG.info("Authenticating username: " + username + " password: " + password);
-        // TODO implement
-        return username.equals("ole");
-    }
-
-    /**
      * Add a new client
      * @param session
      */
@@ -154,6 +144,9 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
 
     @Override
     public void start() {
+        // Register server in provider
+        AisVirtualNetServerProvider.setServer(this);
+        
         try {
             server.start();
             LOG.info("Ready to accept incoming sockets");
@@ -165,7 +158,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
             }
             return;
         }
-
+        
         // Start aisbus
         aisBus.startConsumers();
         aisBus.startProviders();
@@ -205,6 +198,35 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
 
         }
 
+    }
+    
+    /**
+     * Get current target table
+     * @return
+     */
+    public TargetTable getTargetTable() {
+        return targetTable;
+    }
+    
+    /**
+     * Method to authenticate a user
+     * @param username
+     * @param password
+     * @return 
+     */
+    public boolean authenticate(String username, String password) {
+        LOG.info("Authenticating username: " + username + " password: " + password);
+        // TODO implement
+        return username.equals("ole");
+    }
+
+    /**
+     * Check token 
+     * @param authToken
+     * @return
+     */
+    public boolean checkToken(String authToken) {
+        return authToken.equals("TOKEN");
     }
 
 }

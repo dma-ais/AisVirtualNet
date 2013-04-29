@@ -24,6 +24,7 @@ import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisStaticCommon;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
 
 /**
  * Simple table of AIS vessel targets
@@ -55,6 +56,18 @@ public class TargetTable {
     
     public Map<Integer, TargetTableEntry> allTargets() {
         return Collections.unmodifiableMap(targets);
+    }
+    
+    /**
+     * Return a message version of the target table
+     * @return
+     */
+    public TargetTableMessage getTargetTableMessage() {
+        TargetTableMessage message = new TargetTableMessage();
+        for (TargetTableEntry target : targets.values()) {
+            message.getTargets().add(target);
+        }
+        return message;
     }
 
 }
