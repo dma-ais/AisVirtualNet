@@ -20,17 +20,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 import javax.xml.bind.JAXBException;
 
@@ -41,7 +42,6 @@ import dk.dma.ais.virtualnet.transponder.ITransponderStatusListener;
 import dk.dma.ais.virtualnet.transponder.Transponder;
 import dk.dma.ais.virtualnet.transponder.TransponderConfiguration;
 import dk.dma.ais.virtualnet.transponder.TransponderStatus;
-import java.awt.FlowLayout;
 
 /**
  * Transponder frame
@@ -56,7 +56,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
 
     private Transponder transponder;
     private TransponderConfiguration conf;
-    
+
     private final JButton startButton = new JButton("Start");
     private final JButton stopButton = new JButton("Stop");;
     private final JTextField mmsi = new JTextField();
@@ -67,9 +67,10 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JPasswordField password = new JPasswordField();
     private final JTextField port = new JTextField();
     private final JTextField receptionRadius = new JTextField();
-    
-    private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[]{mmsi, resendInterval, serverHost, serverPort, username, password, port, receptionRadius});
-    
+
+    private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
+            serverHost, serverPort, username, password, port, receptionRadius });
+
     public TransponderFrame() {
         this("transponder.xml");
     }
@@ -81,25 +82,42 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("AisVirtualNet transponder");
         setLocationRelativeTo(null);
-        
+
         startButton.addActionListener(this);
         stopButton.addActionListener(this);
-        
+
         layoutGui();
 
         loadConf();
         saveConf();
-        
+
         // Update GUI components with configuration values
-        updateValues();    
+        updateValues();
 
     }
-    
-    
+
+    /**
+     * Update values in components from conf
+     */
     private void updateValues() {
-        // TODO
+        setVal(mmsi, conf.getOwnMmsi());
+        setVal(resendInterval, conf.getOwnPosInterval());
+        setVal(serverHost, conf.getServerHost());
+        setVal(serverPort, conf.getServerPort());
+        setVal(username, conf.getUsername());
+        setVal(password, conf.getPassword());
+        setVal(port, conf.getPort());
+        setVal(receptionRadius, conf.getReceiveRadius());
     }
-    
+
+    private void setVal(JTextField field, String val) {
+        field.setText(val);
+    }
+
+    private void setVal(JTextField field, int val) {
+        setVal(field, Integer.toString(val));
+    }
+
     private void updateEnabled() {
         startButton.setEnabled(transponder == null);
         stopButton.setEnabled(transponder != null);
@@ -107,9 +125,10 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             comp.setEnabled(transponder == null);
         }
     }
-    
+
     /**
      * Update status components with transponder state
+     * 
      * @param status
      */
     private void updateStatus(TransponderStatus status) {
@@ -119,7 +138,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
 
     @Override
     public void stateChanged(final TransponderStatus status) {
-        SwingUtilities.invokeLater(new Runnable() {            
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 updateStatus(status);
@@ -131,12 +150,11 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == startButton) {
             startTransponder();
-        }
-        else if (e.getSource() == stopButton) {
+        } else if (e.getSource() == stopButton) {
             stopTransponder();
         }
     }
-    
+
     public void startTransponder() {
         if (transponder != null) {
             LOG.error("Trying to start transponder already started");
@@ -154,7 +172,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         transponder.getStatus().addListener(this);
         transponder.start();
     }
-    
+
     private void stopTransponder() {
         if (transponder == null) {
             LOG.error("Trying to stop transponder already stopped");
@@ -185,20 +203,59 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             LOG.error("Failed to save configuration", e);
         }
     }
-    
+
     private void layoutGui() {
-        getContentPane().setLayout(new FlowLayout());
-        // TODO do the layout
-        getContentPane().add(startButton);
-        getContentPane().add(stopButton);
-        getContentPane().add(mmsi);
-        getContentPane().add(resendInterval);
-        getContentPane().add(serverHost);
-        getContentPane().add(serverPort);
-        getContentPane().add(username);
-        getContentPane().add(password);
-        getContentPane().add(port);
-        getContentPane().add(receptionRadius);        
+        GroupLayout groupLayout = new GroupLayout(getContentPane());
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(startButton)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addComponent(stopButton)
+                            .addGap(42)
+                            .addComponent(receptionRadius, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE))
+                        .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
+                            .addComponent(port, Alignment.LEADING)
+                            .addComponent(password, Alignment.LEADING)
+                            .addComponent(username, Alignment.LEADING)
+                            .addComponent(serverPort, Alignment.LEADING)
+                            .addComponent(serverHost, Alignment.LEADING)
+                            .addComponent(resendInterval, Alignment.LEADING)
+                            .addComponent(mmsi, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE)))
+                    .addContainerGap(168, Short.MAX_VALUE))
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addGap(5)
+                            .addComponent(mmsi, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(resendInterval, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(serverHost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(serverPort, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(username, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(password, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(port, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.UNRELATED)
+                            .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+                                .addComponent(startButton)
+                                .addComponent(stopButton)))
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addGap(242)
+                            .addComponent(receptionRadius, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
+                    .addContainerGap())
+        );
+        getContentPane().setLayout(groupLayout);
     }
 
 }
