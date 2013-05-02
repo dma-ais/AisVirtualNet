@@ -15,6 +15,8 @@
  */
 package dk.dma.ais.virtualnet.transponder;
 
+import java.util.concurrent.CopyOnWriteArraySet;
+
 import dk.dma.enav.model.geometry.Position;
 import net.jcip.annotations.ThreadSafe;
 
@@ -23,28 +25,85 @@ import net.jcip.annotations.ThreadSafe;
  */
 @ThreadSafe
 public class TransponderStatus {
-    
+
     private Position ownPos;
     private boolean clientConnected;
+    private boolean serverConnected;
+    private String authError;
+    private String reserveError;
     
+    private final CopyOnWriteArraySet<ITransponderStatusListener> listeners = new CopyOnWriteArraySet<>();
+
     public TransponderStatus() {
-        
+
     }
     
     public synchronized boolean isClientConnected() {
         return clientConnected;
     }
-    
-    public synchronized void setClientConnected(boolean clientConnected) {
-        this.clientConnected = clientConnected;
+
+    public void setClientConnected(boolean clientConnected) {
+        synchronized (this) {
+            this.clientConnected = clientConnected;
+        }
+        notifyListeners();
     }
-    
+
     public synchronized Position getOwnPos() {
         return ownPos;
     }
-    
-    public synchronized void setOwnPos(Position ownPos) {
-        this.ownPos = ownPos;
+
+    public void setOwnPos(Position ownPos) {
+        synchronized (this) {
+            this.ownPos = ownPos;
+        }
+        notifyListeners();
     }
 
+    public synchronized boolean isServerConnected() {
+        return serverConnected;
+    }
+
+    public void setServerConnected(boolean serverConnected) {
+        synchronized (this) {
+            this.serverConnected = serverConnected;
+        }
+        notifyListeners();
+    }
+
+    public synchronized String getAuthError() {
+        return authError;
+    }
+
+    public void setAuthError(String authError) {
+        synchronized (this) {
+            this.authError = authError;
+        }
+        notifyListeners();        
+    }
+
+    public synchronized String getReserveError() {
+        return reserveError;
+    }
+
+    public void setReserveError(String reserveError) {
+        synchronized (this) {
+            this.reserveError = reserveError;
+        }
+        notifyListeners();
+    }
+    
+    private void notifyListeners() {
+        for (ITransponderStatusListener listener : listeners) {
+            listener.stateChanged(this);
+        }
+    }
+    
+    public void addListener(ITransponderStatusListener listener) {
+        listeners.add(listener);
+    }
+    
+    public void removeListener(ITransponderStatusListener listener) {
+        listeners.remove(listener);
+    }
 }

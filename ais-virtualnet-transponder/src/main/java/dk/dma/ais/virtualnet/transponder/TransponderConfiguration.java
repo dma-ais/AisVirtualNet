@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class TransponderConfiguration {
 
-    private Integer ownMmsi;
+    private int ownMmsi;
     private int ownPosInterval = 5; // five seconds
     private int receiveRadius = 75000; // 75 km (approx 40 nm)
     private int port = 8001;
@@ -58,11 +58,11 @@ public class TransponderConfiguration {
         this.password = password;
     }
 
-    public Integer getOwnMmsi() {
+    public int getOwnMmsi() {
         return ownMmsi;
     }
 
-    public void setOwnMmsi(Integer ownMmsi) {
+    public void setOwnMmsi(int ownMmsi) {
         this.ownMmsi = ownMmsi;
     }
 

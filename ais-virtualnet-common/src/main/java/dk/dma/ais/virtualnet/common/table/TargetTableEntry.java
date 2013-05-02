@@ -53,7 +53,7 @@ public class TargetTableEntry {
         } else if (message instanceof AisStaticCommon) {
             String n = ((AisStaticCommon) message).getName();
             if (n != null) {
-                name = n;
+                name = AisMessage.trimText(n);
             }
         }
 

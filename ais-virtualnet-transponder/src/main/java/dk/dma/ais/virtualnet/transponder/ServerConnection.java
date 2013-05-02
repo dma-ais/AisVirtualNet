@@ -38,7 +38,6 @@ public class ServerConnection extends Thread {
     private final TransponderConfiguration conf;
 
     private volatile WebSocketClientSession session;
-    private volatile boolean connected;
 
     public ServerConnection(Transponder transponder, TransponderConfiguration conf) {
         this.transponder = transponder;
@@ -49,7 +48,7 @@ public class ServerConnection extends Thread {
      * Send packet to server
      */
     public void send(AisPacket packet) {
-        if (connected) {
+        if (transponder.getStatus().isServerConnected()) {
             session.sendPacket(packet);
         }
     }
@@ -81,19 +80,16 @@ public class ServerConnection extends Thread {
         // Try to authenticate
         AuthenticationReplyMessage authReply = restClient.authenticate(conf.getUsername(), conf.getPassword());
         String authToken = null;
-        String authError;
         if (authReply == null) {
-            authError = "No response from server";
+            transponder.getStatus().setAuthError("No response from server");
         } else {
             if (authReply.getAuthToken() != null) {
-                authToken = authReply.getAuthToken();
-            } else {
-                authError = authReply.getErrorMessage();
+                authToken = authReply.getAuthToken();               
             }
+            transponder.getStatus().setAuthError(authReply.getErrorMessage());
         }
         if (authToken == null) {
             LOG.info("Failed to authenticate");
-            // TODO Handle error (what to do?) report back but continue
         }
         return authToken;
     }
@@ -103,10 +99,11 @@ public class ServerConnection extends Thread {
         RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
         ReserveMmsiReplyMessage reply = restClient.reserveMmsi(mmsi, authToken);
         if (reply == null || reply.getResult() != ReserveResult.MMSI_RESERVED) {
-            LOG.info("Failed to reserver mmsi: " + ((reply != null) ? reply.getResult() : "no response"));
-            // TODO handle this error report back state
+            transponder.getStatus().setReserveError((reply != null) ? reply.getResult().name() : "no response");
+            LOG.info("Failed to reserver mmsi: " + transponder.getStatus().getReserveError());           
             return false;
         }
+        transponder.getStatus().setReserveError(null);
         return true;
     }
 
@@ -123,7 +120,7 @@ public class ServerConnection extends Thread {
                 LOG.error("Timeout waiting for connection");
                 session.close();
             } else {
-                connected = true;
+                transponder.getStatus().setServerConnected(true);
             }
         } catch (Exception e) {
             LOG.error("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
@@ -136,7 +133,8 @@ public class ServerConnection extends Thread {
             if (isInterrupted()) {
                 return;
             }
-            connected = false;
+            transponder.getStatus().setServerConnected(false);
+
 
             String authToken = authenticate();
 
@@ -148,7 +146,7 @@ public class ServerConnection extends Thread {
                 }
             }
 
-            if (!connected) {
+            if (!transponder.getStatus().isServerConnected()) {
                 // Something went wrong, wait a while
                 try {
                     LOG.info("Waiting to reconnect");

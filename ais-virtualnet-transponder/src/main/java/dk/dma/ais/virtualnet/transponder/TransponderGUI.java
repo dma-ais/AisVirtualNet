@@ -32,7 +32,7 @@ public class TransponderGUI extends AbstractCommandLineTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransponderGUI.class);
 
-    @Parameter(names = "-file", description = "Transponder configuration file")
+    @Parameter(names = "-conf", description = "Transponder configuration file")
     String confFile = "transponder.xml";
 
     @Override
@@ -54,8 +54,11 @@ public class TransponderGUI extends AbstractCommandLineTool {
         // Make sure we have nice window decorations.
         JFrame.setDefaultLookAndFeelDecorated(true);
 
-        TransponderFrame frame = new TransponderFrame();
+        TransponderFrame frame = new TransponderFrame(confFile);
         frame.setVisible(true);
+        
+        frame.startTransponder();
+        
     }
 
     public static void main(String[] args) throws Exception {
