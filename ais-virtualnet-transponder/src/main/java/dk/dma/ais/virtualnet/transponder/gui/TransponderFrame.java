@@ -20,10 +20,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.xml.bind.JAXBException;
 
@@ -49,8 +56,19 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
 
     private Transponder transponder;
     private TransponderConfiguration conf;
-    private final JButton startButton;
-    private final JButton stopButton;
+    
+    private final JButton startButton = new JButton("Start");
+    private final JButton stopButton = new JButton("Stop");;
+    private final JTextField mmsi = new JTextField();
+    private final JTextField resendInterval = new JTextField();
+    private final JTextField serverHost = new JTextField();
+    private final JTextField serverPort = new JTextField();
+    private final JTextField username = new JTextField();
+    private final JPasswordField password = new JPasswordField();
+    private final JTextField port = new JTextField();
+    private final JTextField receptionRadius = new JTextField();
+    
+    private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[]{mmsi, resendInterval, serverHost, serverPort, username, password, port, receptionRadius});
     
     public TransponderFrame() {
         this("transponder.xml");
@@ -64,9 +82,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         setTitle("AisVirtualNet transponder");
         setLocationRelativeTo(null);
         
-        startButton = new JButton("Start");
         startButton.addActionListener(this);
-        stopButton = new JButton("Stop");
         stopButton.addActionListener(this);
         
         layoutGui();
@@ -87,8 +103,9 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private void updateEnabled() {
         startButton.setEnabled(transponder == null);
         stopButton.setEnabled(transponder != null);
-        
-        // TODO: Lock or unlock components
+        for (JComponent comp : lockedWhileRunningComponents) {
+            comp.setEnabled(transponder == null);
+        }
     }
     
     /**
@@ -170,10 +187,18 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     }
     
     private void layoutGui() {
-        getContentPane().setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        getContentPane().setLayout(new FlowLayout());
         // TODO do the layout
         getContentPane().add(startButton);
         getContentPane().add(stopButton);
+        getContentPane().add(mmsi);
+        getContentPane().add(resendInterval);
+        getContentPane().add(serverHost);
+        getContentPane().add(serverPort);
+        getContentPane().add(username);
+        getContentPane().add(password);
+        getContentPane().add(port);
+        getContentPane().add(receptionRadius);        
     }
 
 }

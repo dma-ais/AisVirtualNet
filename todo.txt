@@ -17,7 +17,7 @@ Step 2:
 
 + Investiage why server blocks on shutdown
 
-+ Investigate if we are allowed to use a dump of a restricted are to public use
++ Investigate if we are allowed to use a dump of a restricted area to public use
 
 + Own message resender cache of all position reports
 	Seems impossible as resender is destroyed when settings are changed
