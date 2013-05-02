@@ -66,10 +66,10 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JTextField username = new JTextField();
     private final JPasswordField password = new JPasswordField();
     private final JTextField port = new JTextField();
-    private final JTextField receptionRadius = new JTextField();
+    private final JTextField receiveRadius = new JTextField();
 
     private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
-            serverHost, serverPort, username, password, port, receptionRadius });
+            serverHost, serverPort, username, password, port, receiveRadius });
 
     public TransponderFrame() {
         this("transponder.xml");
@@ -95,6 +95,32 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         updateValues();
 
     }
+    
+    /**
+     * Update configuration from GUI components
+     */
+    private void updateConf() {
+        conf.setOwnMmsi(getInt(mmsi));
+        conf.setOwnPosInterval(getInt(resendInterval));
+        conf.setServerHost(getString(serverHost));
+        conf.setServerPort(getInt(serverPort));
+        conf.setUsername(getString(username));
+        conf.setPassword(getString(password));
+        conf.setPort(getInt(port));
+        conf.setReceiveRadius(getInt(receiveRadius));
+    }
+    
+    private String getString(JTextField field) {
+        return field.getText();
+    }
+    
+    private int getInt(JTextField field) {
+        try {
+            return Integer.parseInt(field.getText());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid integer: " + field.getText());
+        }
+    }
 
     /**
      * Update values in components from conf
@@ -107,7 +133,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         setVal(username, conf.getUsername());
         setVal(password, conf.getPassword());
         setVal(port, conf.getPort());
-        setVal(receptionRadius, conf.getReceiveRadius());
+        setVal(receiveRadius, conf.getReceiveRadius() / 1852);
     }
 
     private void setVal(JTextField field, String val) {
@@ -158,6 +184,12 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public void startTransponder() {
         if (transponder != null) {
             LOG.error("Trying to start transponder already started");
+            return;
+        }
+        try {
+            updateConf();
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Transponder error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         try {
@@ -216,7 +248,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
                         .addGroup(groupLayout.createSequentialGroup()
                             .addComponent(stopButton)
                             .addGap(42)
-                            .addComponent(receptionRadius, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE))
+                            .addComponent(receiveRadius, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE))
                         .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
                             .addComponent(port, Alignment.LEADING)
                             .addComponent(password, Alignment.LEADING)
@@ -252,7 +284,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
                                 .addComponent(stopButton)))
                         .addGroup(groupLayout.createSequentialGroup()
                             .addGap(242)
-                            .addComponent(receptionRadius, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(receiveRadius, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
                     .addContainerGap())
         );
         getContentPane().setLayout(groupLayout);
