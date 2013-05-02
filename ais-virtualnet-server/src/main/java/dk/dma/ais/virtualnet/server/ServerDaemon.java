@@ -16,6 +16,7 @@
 package dk.dma.ais.virtualnet.server;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import org.slf4j.Logger;
@@ -34,8 +35,10 @@ public class ServerDaemon extends AbstractDaemon {
     
     private static final Logger LOG = LoggerFactory.getLogger(ServerDaemon.class);
     
-    @Parameter(names = "-file", description = "AisVirtualNetServer server configuration file")
+    @Parameter(names = "-conf", description = "AisVirtualNetServer server configuration file")
     String confFile = "server.xml";
+    @Parameter(names = "-users", description = "AisVirtualNetServer server users file")
+    String usersFile = "users.txt";
     
     AisVirtualNetServer server;
     
@@ -53,9 +56,13 @@ public class ServerDaemon extends AbstractDaemon {
         }
         
         // Start server
-        server = new AisVirtualNetServer(conf);
-        server.start();
-        
+        try {
+        server = new AisVirtualNetServer(conf, usersFile);
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
+            return;
+        }
+        server.start();        
     }
     
     @Override

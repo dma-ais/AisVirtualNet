@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <transponderConfiguration>
-    <ownMmsi>219622000</ownMmsi>
+    <ownMmsi>0</ownMmsi>
     <ownPosInterval>5</ownPosInterval>
     <port>8001</port>
     <receiveRadius>10000</receiveRadius>
     <serverHost>localhost</serverHost>
     <serverPort>8080</serverPort>
     <username>ole</username>
+    <password>julemand</password>
 </transponderConfiguration>

@@ -27,9 +27,11 @@ public class WebSocketClientSession extends WebSocketSession {
     private final CountDownLatch closed = new CountDownLatch(1);
     
     private final ServerConnection connection;
+    private final String authToken;
     
-    public WebSocketClientSession(ServerConnection connection) {
+    public WebSocketClientSession(ServerConnection connection, String authToken) {
         this.connection = connection;
+        this.authToken = authToken;
     }
     
     @Override
@@ -37,7 +39,7 @@ public class WebSocketClientSession extends WebSocketSession {
         super.onWebSocketConnect(session);
         // Send credentials
         WsMessage msg = new WsMessage();
-        msg.setAuthToken("TOKEN");
+        msg.setAuthToken(authToken);
         sendMessage(msg);
     }
     

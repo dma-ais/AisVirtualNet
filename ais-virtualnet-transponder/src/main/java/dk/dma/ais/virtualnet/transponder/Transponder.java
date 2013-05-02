@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.commons.lang.StringUtils;
@@ -43,6 +42,7 @@ import dk.dma.ais.sentence.Sentence;
 import dk.dma.ais.sentence.SentenceException;
 import dk.dma.ais.sentence.Vdm;
 import dk.dma.ais.transform.VdmVdoTransformer;
+import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
 import dk.dma.enav.model.geometry.Position;
 
 /**
@@ -51,39 +51,38 @@ import dk.dma.enav.model.geometry.Position;
 @ThreadSafe
 public class Transponder extends Thread {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Transponder.class); 
+    private static final Logger LOG = LoggerFactory.getLogger(Transponder.class);
 
     private final TransponderConfiguration conf;
+    private final TransponderStatus status;
     private final ServerConnection serverConnection;
     private final ServerSocket serverSocket;
     private final TransponderOwnMessage ownMessage;
     private final VdmVdoTransformer vdoTransformer;
 
-    private volatile boolean clientConnected;
     private volatile Socket socket;
     private volatile PrintWriter out;
     private Abm abm = new Abm();
     private Bbm bbm = new Bbm();
     private Abk abk = new Abk();
     private int sequence;
-    @GuardedBy("this")
-    private Position ownPos;
 
     public Transponder(TransponderConfiguration conf) throws IOException {
         this.conf = conf;
+        status = new TransponderStatus();
         serverConnection = new ServerConnection(this, conf);
         serverSocket = new ServerSocket(conf.getPort());
         ownMessage = new TransponderOwnMessage(this, conf.getOwnPosInterval());
         vdoTransformer = new VdmVdoTransformer(conf.getOwnMmsi());
     }
-    
+
     /**
      * Data received from network
      * 
      * @param packet
      */
     public void receive(String strPacket) {
-        if (!clientConnected) {
+        if (!status.isClientConnected()) {
             return;
         }
         // Make packet and get ais message
@@ -111,7 +110,6 @@ public class Transponder extends Thread {
             }
         }
 
-
         // Handle position
         if (message instanceof IVesselPositionMessage) {
             IVesselPositionMessage posMsg = (IVesselPositionMessage) message;
@@ -120,18 +118,16 @@ public class Transponder extends Thread {
                 ownMessage.setOwnMessage(packet);
                 // Save own position if valid
                 if (posMsg.isPositionValid()) {
-                    synchronized (this) {
-                        ownPos = posMsg.getPos().getGeoLocation();
-                    }
-                }                
+                    status.setOwnPos(posMsg.getPos().getGeoLocation());
+                }
             } else {
                 // Is this message valid and within radius
                 if (!posMsg.isPositionValid()) {
-                    return;                    
+                    return;
                 }
                 synchronized (this) {
                     Position pos = posMsg.getPos().getGeoLocation();
-                    if (ownPos == null || pos.rhumbLineDistanceTo(ownPos) > conf.getReceiveRadius()) {
+                    if (status.getOwnPos() == null || pos.rhumbLineDistanceTo(status.getOwnPos()) > conf.getReceiveRadius()) {
                         return;
                     }
                 }
@@ -143,10 +139,11 @@ public class Transponder extends Thread {
 
     /**
      * Send message to client
+     * 
      * @param str
      */
     public void send(String str) {
-        if (clientConnected) {
+        if (status.isClientConnected()) {
             out.print(str + "\r\n");
             out.flush();
         }
@@ -183,7 +180,7 @@ public class Transponder extends Thread {
     @Override
     public void run() {
         while (true) {
-            clientConnected = false;
+            status.setClientConnected(false);
 
             // Wait for connections
             LOG.info("Waiting for connection on port " + conf.getPort());
@@ -199,7 +196,7 @@ public class Transponder extends Thread {
 
             try {
                 out = new PrintWriter(socket.getOutputStream());
-                clientConnected = true;
+                status.setClientConnected(true);
                 readFromAI();
             } catch (IOException e) {
             }
@@ -327,6 +324,15 @@ public class Transponder extends Thread {
         String encoded = abk.getEncoded() + "\r\n";
         LOG.info("Sending ABK: " + encoded);
         send(encoded);
+    }
+    
+    public TargetTableMessage getTargets() {
+        RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
+        return restClient.getTargetTable(conf.getUsername(), conf.getPassword());
+    }
+    
+    public TransponderStatus getStatus() {
+        return status;
     }
 
 }

@@ -69,5 +69,29 @@ public class TargetTable {
         }
         return message;
     }
+    
+    /**
+     * Return a message version of the target table with alive targets
+     * @return
+     */
+    public TargetTableMessage getAliveTargetTableMessage() {
+        TargetTableMessage message = new TargetTableMessage();
+        for (TargetTableEntry target : targets.values()) {
+            if (target.isAlive()) {
+                message.getTargets().add(target);
+            }
+        }
+        return message;
+    }
+
+    /**
+     * Return if target exists and is alive
+     * @param mmsi
+     * @return
+     */
+    public boolean exists(int mmsi) {
+        TargetTableEntry target = targets.get(mmsi);
+        return target != null && target.isAlive();  
+    }
 
 }

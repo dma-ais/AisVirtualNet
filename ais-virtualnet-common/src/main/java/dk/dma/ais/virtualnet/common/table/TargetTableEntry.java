@@ -15,6 +15,8 @@
  */
 package dk.dma.ais.virtualnet.common.table;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import net.jcip.annotations.ThreadSafe;
 import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisStaticCommon;
@@ -23,17 +25,25 @@ import dk.dma.enav.model.geometry.Position;
 
 @ThreadSafe
 public class TargetTableEntry {
+    
+    /**
+     * Default time a target is considered to be alive
+     */
+    private static final int DEFAULT_TTL = 10 * 60 * 1000;  // 10 min
 
     private int mmsi;
     private String name;
     private double lat;
     private double lon;
+    private long lastMessage;
 
     public TargetTableEntry() {
 
     }
 
     public synchronized void update(AisMessage message) {
+        mmsi = message.getUserId();
+        lastMessage = System.currentTimeMillis();
         if (message instanceof IVesselPositionMessage) {
             Position pos = ((IVesselPositionMessage) message).getPos().getGeoLocation();
             if (pos != null) {
@@ -64,5 +74,19 @@ public class TargetTableEntry {
     public synchronized double getLon() {
         return lon;
     }
-
+    
+    public synchronized long getLastMessage() {
+        return lastMessage;
+    }
+    
+    public synchronized boolean isAlive(int ttl) {
+        return (System.currentTimeMillis() - lastMessage) < ttl;
+    }
+    
+    @XmlTransient
+    public synchronized boolean isAlive() {
+        return isAlive(DEFAULT_TTL);
+    }
+    
+    
 }

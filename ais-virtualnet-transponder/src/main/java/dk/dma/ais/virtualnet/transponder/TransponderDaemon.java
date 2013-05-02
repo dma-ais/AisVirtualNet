@@ -33,7 +33,7 @@ public class TransponderDaemon extends AbstractDaemon {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransponderDaemon.class);
 
-    @Parameter(names = "-file", description = "Transponder configuration file")
+    @Parameter(names = "-conf", description = "Transponder configuration file")
     String confFile = "transponder.xml";
 
     Transponder transponder;

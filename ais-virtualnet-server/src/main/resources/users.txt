@@ -1,0 +1,3 @@
+#username:password
+ole:julemand
+anonymous:anonymous

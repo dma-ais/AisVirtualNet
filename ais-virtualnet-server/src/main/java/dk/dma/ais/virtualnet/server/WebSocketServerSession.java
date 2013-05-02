@@ -29,7 +29,8 @@ public class WebSocketServerSession extends WebSocketSession {
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
     
     private final AisVirtualNetServer server;
-    private volatile boolean authenticated; 
+    private volatile boolean authenticated;
+    private volatile String authToken;
     
     public WebSocketServerSession(AisVirtualNetServer server) {
         this.server = server;
@@ -44,6 +45,9 @@ public class WebSocketServerSession extends WebSocketSession {
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         server.removeClient(this);
+        if (authToken != null) {
+            server.getMmsiBroker().release(authToken);
+        }
         super.onWebSocketClose(statusCode, reason);
     }
     
@@ -59,8 +63,17 @@ public class WebSocketServerSession extends WebSocketSession {
     protected void handleMessage(WsMessage wsMessage) {
         // Maybe message a token
         if (wsMessage.getAuthToken() != null) {
-            authenticated = server.checkToken(wsMessage.getAuthToken());
+            authToken = wsMessage.getAuthToken();
+            authenticated = server.checkToken(authToken);
             LOG.info("Authentication result: " + authenticated);
+            // Maybe activate MMSI reservation
+            if (authenticated) {
+                if (!server.getMmsiBroker().activate(authToken)) {
+                    LOG.error("Failed to activate MMSI reservation");
+                    close();
+                    return;
+                }
+            }
         }
         String strPacket = wsMessage.getPacket();
         if (strPacket == null) {
@@ -68,6 +81,7 @@ public class WebSocketServerSession extends WebSocketSession {
         }
         if (!authenticated) {
             LOG.error("Client sending messages without authentication");
+            close();
             return;
         }
         LOG.info("Received message from client:\n" + strPacket);

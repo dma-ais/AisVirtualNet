@@ -20,6 +20,14 @@
 			<outputDirectory>/</outputDirectory>
 			<includes>
 				<include>*.xml</include>
+				<include>*.txt</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>web</directory>
+			<outputDirectory>web</outputDirectory>
+			<includes>
+				<include>**</include>
 			</includes>
 		</fileSet>
 	</fileSets>

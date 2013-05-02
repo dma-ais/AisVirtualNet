@@ -18,29 +18,31 @@ package dk.dma.ais.virtualnet.common.message;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class AuthenticationReplyMessage {
-
-    private String authToken;
-    private String errorMessage;
-
-    public AuthenticationReplyMessage() {
-
+public class ReserveMmsiReplyMessage {
+    
+    public enum ReserveResult {        
+        MMSI_RESERVED,
+        NOT_AUTHENTICATED,
+        MMSI_NOT_FOUND,
+        MMSI_ALREADY_RESERVED;
     }
-
-    public String getAuthToken() {
-        return authToken;
+    
+    private ReserveResult result;
+        
+    public ReserveMmsiReplyMessage() {
+        
     }
-
-    public void setAuthToken(String authToken) {
-        this.authToken = authToken;
+    
+    public ReserveMmsiReplyMessage(ReserveResult result) {
+        this.result = result;
     }
-
-    public String getErrorMessage() {
-        return errorMessage;
+    
+    public ReserveResult getResult() {
+        return result;
     }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    
+    public void setResult(ReserveResult result) {
+        this.result = result;
     }
-
+    
 }

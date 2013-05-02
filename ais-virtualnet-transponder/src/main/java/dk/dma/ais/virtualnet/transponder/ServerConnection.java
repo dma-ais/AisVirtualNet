@@ -23,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.virtualnet.common.message.AuthenticationReplyMessage;
+import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage;
+import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage.ReserveResult;
 
 /**
  * Class that maintains the connection to the server
@@ -66,15 +69,65 @@ public class ServerConnection extends Thread {
         if (session != null) {
             session.close();
         }
-        try {
-            this.join(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public TransponderConfiguration getConf() {
         return conf;
+    }
+
+    private String authenticate() {
+        // Make rest client
+        RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
+        // Try to authenticate
+        AuthenticationReplyMessage authReply = restClient.authenticate(conf.getUsername(), conf.getPassword());
+        String authToken = null;
+        String authError;
+        if (authReply == null) {
+            authError = "No response from server";
+        } else {
+            if (authReply.getAuthToken() != null) {
+                authToken = authReply.getAuthToken();
+            } else {
+                authError = authReply.getErrorMessage();
+            }
+        }
+        if (authToken == null) {
+            LOG.info("Failed to authenticate");
+            // TODO Handle error (what to do?) report back but continue
+        }
+        return authToken;
+    }
+
+    public boolean reserveMmsi(int mmsi, String authToken) {
+        // Make rest client
+        RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
+        ReserveMmsiReplyMessage reply = restClient.reserveMmsi(mmsi, authToken);
+        if (reply == null || reply.getResult() != ReserveResult.MMSI_RESERVED) {
+            LOG.info("Failed to reserver mmsi: " + ((reply != null) ? reply.getResult() : "no response"));
+            // TODO handle this error report back state
+            return false;
+        }
+        return true;
+    }
+
+    private void makeSession(String authToken) {
+        // Make session
+        session = new WebSocketClientSession(this, authToken);
+        // Make client and connect
+        WebSocketClient client = new WebSocketClient();
+        String serverUrl = conf.createServerUrl();
+        try {
+            client.start();
+            client.connect(session, new URI(serverUrl)).get();
+            if (!session.getConnected().await(10, TimeUnit.SECONDS)) {
+                LOG.error("Timeout waiting for connection");
+                session.close();
+            } else {
+                connected = true;
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
+        }
     }
 
     @Override
@@ -82,31 +135,24 @@ public class ServerConnection extends Thread {
         while (true) {
             if (isInterrupted()) {
                 return;
-            }            
+            }
             connected = false;
-            // Make session
-            session = new WebSocketClientSession(this);
-            // Make client and connect
-            WebSocketClient client = new WebSocketClient();
-            String serverUrl = conf.createServerUrl();
-            try {
-                client.start();
-                client.connect(session, new URI(serverUrl)).get();
-                if (!session.getConnected().await(10, TimeUnit.SECONDS)) {
-                    LOG.error("Timeout waiting for connection");
-                    session.close();
-                } else {
-                    connected = true;
+
+            String authToken = authenticate();
+
+            if (authToken != null) {
+                // Try to reserver MMSI and make session
+                if (reserveMmsi(conf.getOwnMmsi(), authToken)) {
+                    // Make session
+                    makeSession(authToken);
                 }
-            } catch (Exception e) {
-                LOG.error("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
             }
 
             if (!connected) {
                 // Something went wrong, wait a while
                 try {
                     LOG.info("Waiting to reconnect");
-                    Thread.sleep(5000);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     return;
                 }
@@ -120,9 +166,9 @@ public class ServerConnection extends Thread {
                 session.close();
                 return;
             }
-            
+
             session.close();
-            
+
         }
 
     }

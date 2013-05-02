@@ -15,12 +15,15 @@
  */
 package dk.dma.ais.virtualnet.common.message;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import dk.dma.ais.packet.AisPacket;
 
 /**
  * Message class for messages sent between virtual transponder and virtual AIS 
  * network over websocket connection
  */
+@XmlRootElement
 public class WsMessage {
     
     private String packet;

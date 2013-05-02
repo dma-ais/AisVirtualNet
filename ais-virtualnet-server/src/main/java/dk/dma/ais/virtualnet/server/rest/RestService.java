@@ -22,8 +22,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import dk.dma.ais.virtualnet.common.message.AuthenticationReplyMessage;
+import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage;
 import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
+import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage.ReserveResult;
 import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
 
 /**
@@ -32,26 +37,73 @@ import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
 @Path("/")
 public class RestService {
     
+    private static final Logger LOG = LoggerFactory.getLogger(RestService.class);
+    
     @Context
     private AisVirtualNetServer server;
+    
+    @GET
+    @Path("test")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String test() {
+        return "status=OK";
+    }
 
     @GET
     @Path("target_table")
     @Produces(MediaType.APPLICATION_JSON)
-    public TargetTableMessage getTargetTable() {
-        return server.getTargetTable().getTargetTableMessage();
+    public TargetTableMessage getTargetTable(@QueryParam("username") String username, @QueryParam("password") String password) {
+        LOG.info("Getting target table for user: " + username + " password: " + password);
+        if (server.getAuthenticator().authenticate(username, password) == null) {
+            LOG.error("\tFailed to authenticate user");
+            return new TargetTableMessage();
+        }
+        return server.getTargetTable().getAliveTargetTableMessage();
     }
     
     @GET
     @Path("authenticate")
     @Produces(MediaType.APPLICATION_JSON)
     public AuthenticationReplyMessage authenticate(@QueryParam("username") String username, @QueryParam("password") String password) {
-        // TODO authenticate
-        
+        LOG.info("Authenticating user: " + username);
         AuthenticationReplyMessage reply = new AuthenticationReplyMessage();
-        reply.setAuthToken("TOKEN");
+        String authToken = server.getAuthenticator().authenticate(username, password);
+        reply.setAuthToken(authToken);
+        if (authToken == null) {
+            reply.setErrorMessage("\tWrong credentials");
+        }
+        LOG.info("\tAuthentication token: " + authToken);
+        return reply;
+    }
+
+    @GET
+    @Path("validate")
+    @Produces(MediaType.APPLICATION_JSON)
+    public AuthenticationReplyMessage validate(@QueryParam("authToken") String authToken) {
+        LOG.info("Validating token: " + authToken);
+        AuthenticationReplyMessage reply = new AuthenticationReplyMessage();
+        if (server.getAuthenticator().validate(authToken)) {
+            reply.setAuthToken(authToken);
+        } else {
+            LOG.info("\tFailed to validate token: " + authToken);
+            reply.setErrorMessage("Invalid token");
+        }
         return reply;
     }
     
+    @GET
+    @Path("reserve_mmsi")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ReserveMmsiReplyMessage reserverMmsi(@QueryParam("mmsi") Integer mmsi, @QueryParam("authToken") String authToken) {
+        LOG.info("Reserving mmsi: " + mmsi + " authToken: " + authToken);
+        ReserveResult result;
+        if (!server.getAuthenticator().validate(authToken)) {
+            result = ReserveResult.NOT_AUTHENTICATED;
+        } else {
+            result = server.getMmsiBroker().reserve(mmsi, authToken);
+        }
+        LOG.info("\tReserve result: " + result);
+        return new ReserveMmsiReplyMessage(result);
+    }
 
 }

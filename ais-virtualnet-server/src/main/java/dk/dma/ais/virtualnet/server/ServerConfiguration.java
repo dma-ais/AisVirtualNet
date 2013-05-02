@@ -58,7 +58,7 @@ public class ServerConfiguration {
     public void setPort(int port) {
         this.port = port;
     }
-
+    
     public static void save(String filename, ServerConfiguration conf) throws JAXBException, FileNotFoundException {
         JAXBContext context = JAXBContext.newInstance(ServerConfiguration.class);
         Marshaller m = context.createMarshaller();

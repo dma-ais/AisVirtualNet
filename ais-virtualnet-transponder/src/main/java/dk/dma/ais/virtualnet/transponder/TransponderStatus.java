@@ -13,34 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
-package dk.dma.ais.virtualnet.common.message;
+package dk.dma.ais.virtualnet.transponder;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import dk.dma.enav.model.geometry.Position;
+import net.jcip.annotations.ThreadSafe;
 
-@XmlRootElement
-public class AuthenticationReplyMessage {
-
-    private String authToken;
-    private String errorMessage;
-
-    public AuthenticationReplyMessage() {
-
+/**
+ * Class to represent the current state of the transponder
+ */
+@ThreadSafe
+public class TransponderStatus {
+    
+    private Position ownPos;
+    private boolean clientConnected;
+    
+    public TransponderStatus() {
+        
     }
-
-    public String getAuthToken() {
-        return authToken;
+    
+    public synchronized boolean isClientConnected() {
+        return clientConnected;
     }
-
-    public void setAuthToken(String authToken) {
-        this.authToken = authToken;
+    
+    public synchronized void setClientConnected(boolean clientConnected) {
+        this.clientConnected = clientConnected;
     }
-
-    public String getErrorMessage() {
-        return errorMessage;
+    
+    public synchronized Position getOwnPos() {
+        return ownPos;
     }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    
+    public synchronized void setOwnPos(Position ownPos) {
+        this.ownPos = ownPos;
     }
 
 }

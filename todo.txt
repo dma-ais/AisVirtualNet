@@ -11,13 +11,11 @@ Step 2:
 -------------------------
 
 + Server:Rest API with services to get list of targets
-	List of targets (Move target table to common and allow sharing through API)
-	Reserve target
-	Release target
-	Get random target
 	Status of server, connected clients etc
 
-+ Authentication solution. Maybe through REST API.
++ Reduce stacktrace dumps
+
++ Investiage why server blocks on shutdown
 
 + Investigate if we are allowed to use a dump of a restricted are to public use
 
@@ -27,5 +25,9 @@ Step 2:
 	Maybe last received for all targets is also needed to allow timeout
 
 + Time stamping in stream option (Maybe GPS message see EPD-ship)
+
++ Documentation
+
++ Setup on cloudbees
 
 

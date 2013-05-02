@@ -15,6 +15,7 @@
  */
 package dk.dma.ais.virtualnet.server;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,13 +56,15 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     private final Server server;
     private final CollectorProvider collector = new CollectorProvider();
     private final TargetTable targetTable = new TargetTable();
+    private final Authenticator authenticator;
+    private final MmsiBroker mmsiBroker;
     
     /**
      * Connected clients
      */
     private final Set<WebSocketServerSession> clients = Collections.newSetFromMap(new ConcurrentHashMap<WebSocketServerSession, Boolean>());
 
-    public AisVirtualNetServer(ServerConfiguration conf) {
+    public AisVirtualNetServer(ServerConfiguration conf, String usersFile) throws IOException {
         // Create web server
         server = new Server(conf.getPort());
         // Sets setReuseAddress
@@ -85,11 +88,16 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         WebAppContext webappContext = new WebAppContext();
         webappContext.setServer(server);
         webappContext.setContextPath("/");
-        webappContext.setWar("web");
-        
+        webappContext.setWar("web");        
         ContextHandlerCollection contexts = new ContextHandlerCollection();
         contexts.setHandlers(new Handler[] { wsContext, webappContext });
         server.setHandler(contexts);
+        
+        // Create authenticator
+        authenticator = new Authenticator(usersFile);
+        
+        // Create MMSI broker
+        mmsiBroker = new MmsiBroker(targetTable);
         
         // Create AisBus
         aisBus = conf.getAisbusConfiguration().getInstance();
@@ -209,15 +217,19 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     }
     
     /**
-     * Method to authenticate a user
-     * @param username
-     * @param password
-     * @return 
+     * Get authenticator
+     * @return
      */
-    public boolean authenticate(String username, String password) {
-        LOG.info("Authenticating username: " + username + " password: " + password);
-        // TODO implement
-        return username.equals("ole");
+    public Authenticator getAuthenticator() {
+        return authenticator;
+    }
+    
+    /**
+     * Get MMSI broker
+     * @return
+     */
+    public MmsiBroker getMmsiBroker() {
+        return mmsiBroker;
     }
 
     /**
@@ -226,7 +238,8 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
      * @return
      */
     public boolean checkToken(String authToken) {
-        return authToken.equals("TOKEN");
+        return authenticator.validate(authToken);
     }
+
 
 }

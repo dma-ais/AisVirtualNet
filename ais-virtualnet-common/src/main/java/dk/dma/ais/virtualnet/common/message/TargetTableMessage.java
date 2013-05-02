@@ -18,11 +18,14 @@ package dk.dma.ais.virtualnet.common.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import dk.dma.ais.virtualnet.common.table.TargetTableEntry;
 
+@XmlRootElement
 public class TargetTableMessage {
        
-    private final List<TargetTableEntry> targets = new ArrayList<>();
+    private List<TargetTableEntry> targets = new ArrayList<>();
     
     public TargetTableMessage() {
         
@@ -30,6 +33,10 @@ public class TargetTableMessage {
     
     public List<TargetTableEntry> getTargets() {
         return targets;
+    }
+    
+    public void setTargets(List<TargetTableEntry> targets) {
+        this.targets = targets;
     }
     
 }
