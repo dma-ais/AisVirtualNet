@@ -81,12 +81,14 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JLabel ownShipPosLabel = new JLabel();
     
     // Icons
-    private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("images/status/UNKNOWN.png"));
-    private static final ImageIcon ERROR_ICON = new ImageIcon(TransponderFrame.class.getResource("images/status/ERROR.png"));
-    private static final ImageIcon OK_ICON = new ImageIcon(TransponderFrame.class.getResource("images/status/OK.png"));
+    private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/UNKNOWN.png"));
+    private static final ImageIcon ERROR_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/ERROR.png"));
+    private static final ImageIcon OK_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/OK.png"));
 
     private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
             serverHost, serverPort, username, password, port, receiveRadius });
+    
+    private final List<JLabel> iconLabels = Arrays.asList(new JLabel[] {clientStatusIconLabel, serverStatusIconLabel, ownShipPosIconLabel});
 
     public TransponderFrame() {
         this("transponder.xml");
@@ -102,6 +104,9 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
 
         startButton.addActionListener(this);
         stopButton.addActionListener(this);
+        
+        System.out.println("OK_ICON: " + OK_ICON);
+        
 
         layoutGui();
 
@@ -166,6 +171,11 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         stopButton.setEnabled(transponder != null);
         for (JComponent comp : lockedWhileRunningComponents) {
             comp.setEnabled(transponder == null);
+        }
+        if (transponder == null) {
+            for (JLabel iconLabel : iconLabels) {
+                iconLabel.setIcon(UNKNOWN_ICON);
+            }
         }
     }
 
@@ -305,6 +315,11 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
                     .addContainerGap())
         );
         getContentPane().setLayout(groupLayout);
+        getContentPane().add(clientStatusIconLabel);
+        getContentPane().add(serverStatusIconLabel);
+        getContentPane().add(serverErrorLabel);
+        getContentPane().add(ownShipPosIconLabel);
+        getContentPane().add(ownShipPosLabel);
     }
 
 }
