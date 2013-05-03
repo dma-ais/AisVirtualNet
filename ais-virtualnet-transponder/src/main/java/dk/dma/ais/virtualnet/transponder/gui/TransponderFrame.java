@@ -15,7 +15,6 @@
  */
 package dk.dma.ais.virtualnet.transponder.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -86,13 +85,12 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private static final ImageIcon ERROR_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/ERROR.png"));
     private static final ImageIcon OK_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/OK.png"));
     
-    private static final Color LABEL_COLOR = new Color(0, 70, 213);
-
     private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
             serverHost, serverPort, username, password, port, receiveRadius });
 
     private final List<JLabel> iconLabels = Arrays.asList(new JLabel[] { clientStatusIconLabel, serverStatusIconLabel,
             ownShipPosIconLabel });
+    private JPanel panel;
 
     public TransponderFrame() {
         this("transponder.xml");
@@ -188,6 +186,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     }
 
     private void setVal(JTextField field, String val) {
+        mmsi.setBounds(47, 36, 122, 28);
+        panel.add(mmsi);
         field.setText(val);
     }
 
@@ -286,27 +286,33 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     }
 
     private void layoutGui() {        
-        JPanel panel = new JPanel(null);
+        getContentPane().setLayout(null);
+        panel = new JPanel(null);
+        panel.setBounds(6, 6, 488, 107);
+        panel.setLayout(null);
         
         JPanel mmsiPanel = new JPanel();
-        mmsiPanel.add(mmsi);
+        mmsiPanel.setBounds(0, 103, 50, -103);
         mmsiPanel.add(selectVesselButton);
         mmsiPanel.add(resendInterval);
         panel.add(mmsiPanel);        
         
         JPanel serverPanel = new JPanel();        
+        serverPanel.setBounds(0, 0, 0, 0);
         serverPanel.add(serverHost);
-        serverPanel.add(port, "wrap");
+        serverPanel.add(serverPort);
         serverPanel.add(username);
-        serverPanel.add(password, "wrap");
+        serverPanel.add(password);
         panel.add(serverPanel);
         
         JPanel transponderPanel = new JPanel();
+        transponderPanel.setBounds(0, 0, 0, 0);
         transponderPanel.add(port);
-        transponderPanel.add(receiveRadius, "wrap");
+        transponderPanel.add(receiveRadius);
         panel.add(transponderPanel);
         
         JPanel statusPanel = new JPanel();
+        statusPanel.setBounds(0, 0, 0, 0);
         statusPanel.add(clientStatusIconLabel);
         statusPanel.add(serverStatusIconLabel);
         statusPanel.add(serverErrorLabel);
@@ -315,6 +321,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         panel.add(statusPanel);
 
         JPanel controlPanel = new JPanel();
+        controlPanel.setBounds(0, 0, 0, 0);
         controlPanel.add(startButton);
         controlPanel.add(stopButton);
         panel.add(controlPanel);
