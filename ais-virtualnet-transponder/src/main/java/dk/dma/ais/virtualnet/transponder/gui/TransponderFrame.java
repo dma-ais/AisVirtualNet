@@ -288,11 +288,11 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private void layoutGui() {        
         getContentPane().setLayout(null);
         panel = new JPanel(null);
-        panel.setBounds(6, 6, 488, 107);
+        panel.setBounds(0, 6, 504, 486);
         panel.setLayout(null);
         
         JPanel mmsiPanel = new JPanel();
-        mmsiPanel.setBounds(0, 103, 50, -103);
+        mmsiPanel.setBounds(0, 178, 198, -178);
         mmsiPanel.add(selectVesselButton);
         mmsiPanel.add(resendInterval);
         panel.add(mmsiPanel);        
