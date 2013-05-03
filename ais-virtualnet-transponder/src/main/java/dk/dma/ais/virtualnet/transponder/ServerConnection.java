@@ -117,13 +117,16 @@ public class ServerConnection extends Thread {
             client.start();
             client.connect(session, new URI(serverUrl)).get();
             if (!session.getConnected().await(10, TimeUnit.SECONDS)) {
-                LOG.error("Timeout waiting for connection");
+                LOG.error("Connection timeout");
+                transponder.getStatus().setServerError("Connection timeout");
                 session.close();
             } else {
                 transponder.getStatus().setServerConnected(true);
+                transponder.getStatus().setServerError(null);
             }
         } catch (Exception e) {
-            LOG.error("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
+            transponder.getStatus().setServerError("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
+            LOG.error(transponder.getStatus().getServerError());            
         }
     }
 

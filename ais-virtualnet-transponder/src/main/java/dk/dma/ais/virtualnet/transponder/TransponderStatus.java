@@ -29,15 +29,16 @@ public class TransponderStatus {
     private Position ownPos;
     private boolean clientConnected;
     private boolean serverConnected;
+    private String serverError;
     private String authError;
     private String reserveError;
-    
+
     private final CopyOnWriteArraySet<ITransponderStatusListener> listeners = new CopyOnWriteArraySet<>();
 
     public TransponderStatus() {
 
     }
-    
+
     public synchronized boolean isClientConnected() {
         return clientConnected;
     }
@@ -79,7 +80,7 @@ public class TransponderStatus {
         synchronized (this) {
             this.authError = authError;
         }
-        notifyListeners();        
+        notifyListeners();
     }
 
     public synchronized String getReserveError() {
@@ -92,17 +93,28 @@ public class TransponderStatus {
         }
         notifyListeners();
     }
-    
+
     private void notifyListeners() {
         for (ITransponderStatusListener listener : listeners) {
             listener.stateChanged(this);
         }
     }
-    
+
+    public synchronized String getServerError() {
+        return serverError;
+    }
+
+    public void setServerError(String serverError) {
+        synchronized (this) {
+            this.serverError = serverError;
+        }
+        notifyListeners();
+    }
+
     public void addListener(ITransponderStatusListener listener) {
         listeners.add(listener);
     }
-    
+
     public void removeListener(ITransponderStatusListener listener) {
         listeners.remove(listener);
     }

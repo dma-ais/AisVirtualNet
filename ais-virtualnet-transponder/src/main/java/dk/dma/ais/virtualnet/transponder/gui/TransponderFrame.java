@@ -25,9 +25,11 @@ import java.util.List;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -57,8 +59,11 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private Transponder transponder;
     private TransponderConfiguration conf;
 
+    // Control buttons
     private final JButton startButton = new JButton("Start");
     private final JButton stopButton = new JButton("Stop");;
+    
+    // Input fields
     private final JTextField mmsi = new JTextField();
     private final JTextField resendInterval = new JTextField();
     private final JTextField serverHost = new JTextField();
@@ -67,6 +72,18 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JPasswordField password = new JPasswordField();
     private final JTextField port = new JTextField();
     private final JTextField receiveRadius = new JTextField();
+    
+    // Status labels
+    private final JLabel clientStatusIconLabel = new JLabel();
+    private final JLabel serverStatusIconLabel = new JLabel();
+    private final JLabel serverErrorLabel = new JLabel();
+    private final JLabel ownShipPosIconLabel = new JLabel();
+    private final JLabel ownShipPosLabel = new JLabel();
+    
+    // Icons
+    private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("images/status/UNKNOWN.png"));
+    private static final ImageIcon ERROR_ICON = new ImageIcon(TransponderFrame.class.getResource("images/status/ERROR.png"));
+    private static final ImageIcon OK_ICON = new ImageIcon(TransponderFrame.class.getResource("images/status/OK.png"));
 
     private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
             serverHost, serverPort, username, password, port, receiveRadius });
