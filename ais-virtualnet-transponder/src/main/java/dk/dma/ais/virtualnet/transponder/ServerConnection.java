@@ -81,12 +81,12 @@ public class ServerConnection extends Thread {
         AuthenticationReplyMessage authReply = restClient.authenticate(conf.getUsername(), conf.getPassword());
         String authToken = null;
         if (authReply == null) {
-            transponder.getStatus().setAuthError("No response from server");
+            transponder.getStatus().setServerError("No response from server");
         } else {
             if (authReply.getAuthToken() != null) {
                 authToken = authReply.getAuthToken();               
             }
-            transponder.getStatus().setAuthError(authReply.getErrorMessage());
+            transponder.getStatus().setServerError(authReply.getErrorMessage());
         }
         if (authToken == null) {
             LOG.info("Failed to authenticate");
@@ -99,11 +99,11 @@ public class ServerConnection extends Thread {
         RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
         ReserveMmsiReplyMessage reply = restClient.reserveMmsi(mmsi, authToken);
         if (reply == null || reply.getResult() != ReserveResult.MMSI_RESERVED) {
-            transponder.getStatus().setReserveError((reply != null) ? reply.getResult().name() : "no response");
-            LOG.info("Failed to reserver mmsi: " + transponder.getStatus().getReserveError());           
+            transponder.getStatus().setServerError((reply != null) ? reply.getResult().name() : "no response");
+            LOG.info("Failed to reserver mmsi: " + transponder.getStatus().getServerError());           
             return false;
         }
-        transponder.getStatus().setReserveError(null);
+        transponder.getStatus().setServerError(null);
         return true;
     }
 

@@ -15,6 +15,7 @@
  */
 package dk.dma.ais.virtualnet.transponder.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,17 +24,15 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 import javax.xml.bind.JAXBException;
 
@@ -44,6 +43,7 @@ import dk.dma.ais.virtualnet.transponder.ITransponderStatusListener;
 import dk.dma.ais.virtualnet.transponder.Transponder;
 import dk.dma.ais.virtualnet.transponder.TransponderConfiguration;
 import dk.dma.ais.virtualnet.transponder.TransponderStatus;
+import dk.dma.commons.util.FormatUtil;
 
 /**
  * Transponder frame
@@ -61,34 +61,38 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
 
     // Control buttons
     private final JButton startButton = new JButton("Start");
-    private final JButton stopButton = new JButton("Stop");;
-    
+    private final JButton stopButton = new JButton("Stop");
+    private final JButton selectVesselButton = new JButton("...");
+
     // Input fields
-    private final JTextField mmsi = new JTextField();
-    private final JTextField resendInterval = new JTextField();
-    private final JTextField serverHost = new JTextField();
-    private final JTextField serverPort = new JTextField();
+    private final JTextField mmsi = new JTextField(9);
+    private final JTextField resendInterval = new JTextField(2);
+    private final JTextField serverHost = new JTextField(20);
+    private final JTextField serverPort = new JTextField(5);
     private final JTextField username = new JTextField();
     private final JPasswordField password = new JPasswordField();
     private final JTextField port = new JTextField();
     private final JTextField receiveRadius = new JTextField();
-    
+
     // Status labels
     private final JLabel clientStatusIconLabel = new JLabel();
     private final JLabel serverStatusIconLabel = new JLabel();
     private final JLabel serverErrorLabel = new JLabel();
     private final JLabel ownShipPosIconLabel = new JLabel();
     private final JLabel ownShipPosLabel = new JLabel();
-    
+
     // Icons
     private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/UNKNOWN.png"));
     private static final ImageIcon ERROR_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/ERROR.png"));
     private static final ImageIcon OK_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/OK.png"));
+    
+    private static final Color LABEL_COLOR = new Color(0, 70, 213);
 
     private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
             serverHost, serverPort, username, password, port, receiveRadius });
-    
-    private final List<JLabel> iconLabels = Arrays.asList(new JLabel[] {clientStatusIconLabel, serverStatusIconLabel, ownShipPosIconLabel});
+
+    private final List<JLabel> iconLabels = Arrays.asList(new JLabel[] { clientStatusIconLabel, serverStatusIconLabel,
+            ownShipPosIconLabel });
 
     public TransponderFrame() {
         this("transponder.xml");
@@ -97,16 +101,18 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public TransponderFrame(String conffile) {
         super();
         this.conffile = conffile;
-        setSize(new Dimension(500, 300));
+        setSize(new Dimension(500, 500));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("AisVirtualNet transponder");
         setLocationRelativeTo(null);
 
         startButton.addActionListener(this);
         stopButton.addActionListener(this);
-        
-        System.out.println("OK_ICON: " + OK_ICON);
-        
+        selectVesselButton.addActionListener(this);
+
+        for (JLabel iconLabel : iconLabels) {
+            iconLabel.setIcon(UNKNOWN_ICON);
+        }
 
         layoutGui();
 
@@ -117,7 +123,30 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         updateValues();
 
     }
-    
+
+    /**
+     * Update status components with transponder state
+     * 
+     * @param status
+     */
+    private void updateStatus(TransponderStatus status) {
+        // Determine client status
+        clientStatusIconLabel.setIcon(status.isClientConnected() ? OK_ICON : ERROR_ICON);
+        // Determine server status
+        serverStatusIconLabel.setIcon(status.isServerConnected() ? OK_ICON : ERROR_ICON);
+        // Set possible server error
+        serverErrorLabel.setText(status.getServerError() != null ? status.getServerError() : "");
+        // Own pos indicating
+        ownShipPosIconLabel.setIcon(status.getOwnPos() != null ? OK_ICON : ERROR_ICON);
+        // Own position
+        String ownPosText = "N/A";
+        if (status.getOwnPos() != null) {
+            ownPosText = String.format(FormatUtil.latToPrintable(status.getOwnPos().getLatitude()) + " - "
+                    + FormatUtil.lonToPrintable(status.getOwnPos().getLongitude()));
+        }
+        ownShipPosLabel.setText(ownPosText);
+    }
+
     /**
      * Update configuration from GUI components
      */
@@ -129,13 +158,13 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         conf.setUsername(getString(username));
         conf.setPassword(getString(password));
         conf.setPort(getInt(port));
-        conf.setReceiveRadius(getInt(receiveRadius));
+        conf.setReceiveRadius(getInt(receiveRadius) * 1852);
     }
-    
+
     private String getString(JTextField field) {
         return field.getText();
     }
-    
+
     private int getInt(JTextField field) {
         try {
             return Integer.parseInt(field.getText());
@@ -169,6 +198,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private void updateEnabled() {
         startButton.setEnabled(transponder == null);
         stopButton.setEnabled(transponder != null);
+        selectVesselButton.setEnabled(transponder != null);
         for (JComponent comp : lockedWhileRunningComponents) {
             comp.setEnabled(transponder == null);
         }
@@ -177,16 +207,6 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
                 iconLabel.setIcon(UNKNOWN_ICON);
             }
         }
-    }
-
-    /**
-     * Update status components with transponder state
-     * 
-     * @param status
-     */
-    private void updateStatus(TransponderStatus status) {
-        System.out.println("updateStatus()");
-        // TODO
     }
 
     @Override
@@ -205,6 +225,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             startTransponder();
         } else if (e.getSource() == stopButton) {
             stopTransponder();
+        } else if (e.getSource() == selectVesselButton) {
+            JOptionPane.showMessageDialog(this, "TBD");
         }
     }
 
@@ -263,63 +285,42 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         }
     }
 
-    private void layoutGui() {
-        GroupLayout groupLayout = new GroupLayout(getContentPane());
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(startButton)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addGroup(groupLayout.createSequentialGroup()
-                            .addComponent(stopButton)
-                            .addGap(42)
-                            .addComponent(receiveRadius, GroupLayout.PREFERRED_SIZE, 128, GroupLayout.PREFERRED_SIZE))
-                        .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING, false)
-                            .addComponent(port, Alignment.LEADING)
-                            .addComponent(password, Alignment.LEADING)
-                            .addComponent(username, Alignment.LEADING)
-                            .addComponent(serverPort, Alignment.LEADING)
-                            .addComponent(serverHost, Alignment.LEADING)
-                            .addComponent(resendInterval, Alignment.LEADING)
-                            .addComponent(mmsi, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE)))
-                    .addContainerGap(168, Short.MAX_VALUE))
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addGroup(groupLayout.createSequentialGroup()
-                            .addGap(5)
-                            .addComponent(mmsi, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(resendInterval, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(serverHost, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(serverPort, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(username, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(password, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(port, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.UNRELATED)
-                            .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                                .addComponent(startButton)
-                                .addComponent(stopButton)))
-                        .addGroup(groupLayout.createSequentialGroup()
-                            .addGap(242)
-                            .addComponent(receiveRadius, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-                    .addContainerGap())
-        );
-        getContentPane().setLayout(groupLayout);
-        getContentPane().add(clientStatusIconLabel);
-        getContentPane().add(serverStatusIconLabel);
-        getContentPane().add(serverErrorLabel);
-        getContentPane().add(ownShipPosIconLabel);
-        getContentPane().add(ownShipPosLabel);
+    private void layoutGui() {        
+        JPanel panel = new JPanel(null);
+        
+        JPanel mmsiPanel = new JPanel();
+        mmsiPanel.add(mmsi);
+        mmsiPanel.add(selectVesselButton);
+        mmsiPanel.add(resendInterval);
+        panel.add(mmsiPanel);        
+        
+        JPanel serverPanel = new JPanel();        
+        serverPanel.add(serverHost);
+        serverPanel.add(port, "wrap");
+        serverPanel.add(username);
+        serverPanel.add(password, "wrap");
+        panel.add(serverPanel);
+        
+        JPanel transponderPanel = new JPanel();
+        transponderPanel.add(port);
+        transponderPanel.add(receiveRadius, "wrap");
+        panel.add(transponderPanel);
+        
+        JPanel statusPanel = new JPanel();
+        statusPanel.add(clientStatusIconLabel);
+        statusPanel.add(serverStatusIconLabel);
+        statusPanel.add(serverErrorLabel);
+        statusPanel.add(ownShipPosIconLabel);
+        statusPanel.add(ownShipPosLabel);
+        panel.add(statusPanel);
+
+        JPanel controlPanel = new JPanel();
+        controlPanel.add(startButton);
+        controlPanel.add(stopButton);
+        panel.add(controlPanel);
+        
+        getContentPane().add(panel);
     }
+
 
 }
