@@ -325,12 +325,12 @@ public class Transponder extends Thread {
         LOG.info("Sending ABK: " + encoded);
         send(encoded);
     }
-    
-    public TargetTableMessage getTargets() {
-        RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
-        return restClient.getTargetTable(conf.getUsername(), conf.getPassword());
+
+    public static TargetTableMessage getTargets(String host, int port, String username, String password) throws RestException {
+        RestClient restClient = new RestClient(host, port);
+        return restClient.getTargetTable(username, password);
     }
-    
+
     public TransponderStatus getStatus() {
         return status;
     }

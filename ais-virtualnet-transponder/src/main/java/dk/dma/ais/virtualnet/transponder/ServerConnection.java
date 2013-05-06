@@ -78,29 +78,35 @@ public class ServerConnection extends Thread {
         // Make rest client
         RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
         // Try to authenticate
-        AuthenticationReplyMessage authReply = restClient.authenticate(conf.getUsername(), conf.getPassword());
-        String authToken = null;
-        if (authReply == null) {
-            transponder.getStatus().setServerError("No response from server");
-        } else {
-            if (authReply.getAuthToken() != null) {
-                authToken = authReply.getAuthToken();               
-            }
+        AuthenticationReplyMessage authReply;
+        try {
+            authReply = restClient.authenticate(conf.getUsername(), conf.getPassword());
+        } catch (RestException e) {
+            LOG.error("Authentication failed: " + e.getMessage());
+            transponder.getStatus().setServerError("No authentication response from server");
+            return null;
+        }
+        if (authReply.getAuthToken() == null) {
+            LOG.info("Authentication failed: " + authReply.getErrorMessage());
             transponder.getStatus().setServerError(authReply.getErrorMessage());
         }
-        if (authToken == null) {
-            LOG.info("Failed to authenticate");
-        }
-        return authToken;
+        return authReply.getAuthToken();
     }
 
     public boolean reserveMmsi(int mmsi, String authToken) {
         // Make rest client
         RestClient restClient = new RestClient(conf.getServerHost(), conf.getServerPort());
-        ReserveMmsiReplyMessage reply = restClient.reserveMmsi(mmsi, authToken);
-        if (reply == null || reply.getResult() != ReserveResult.MMSI_RESERVED) {
-            transponder.getStatus().setServerError((reply != null) ? reply.getResult().name() : "no response");
-            LOG.info("Failed to reserver mmsi: " + transponder.getStatus().getServerError());           
+        ReserveMmsiReplyMessage reply;
+        try {
+            reply = restClient.reserveMmsi(mmsi, authToken);
+        } catch (RestException e) {
+            LOG.error("Failed to reserver MMSI: " + e.getMessage());
+            transponder.getStatus().setServerError("Failed to reserve mmsi: no response");
+            return false;
+        }
+        if (reply.getResult() != ReserveResult.MMSI_RESERVED) {
+            transponder.getStatus().setServerError(reply.getResult().name());
+            LOG.info("Failed to reserver mmsi: " + transponder.getStatus().getServerError());
             return false;
         }
         transponder.getStatus().setServerError(null);
@@ -126,7 +132,7 @@ public class ServerConnection extends Thread {
             }
         } catch (Exception e) {
             transponder.getStatus().setServerError("Failed to connect web socket: " + e.getMessage() + " url: " + serverUrl);
-            LOG.error(transponder.getStatus().getServerError());            
+            LOG.error(transponder.getStatus().getServerError());
         }
     }
 
@@ -137,7 +143,6 @@ public class ServerConnection extends Thread {
                 return;
             }
             transponder.getStatus().setServerConnected(false);
-
 
             String authToken = authenticate();
 

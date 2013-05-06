@@ -15,7 +15,9 @@
  */
 package dk.dma.ais.virtualnet.transponder.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
@@ -33,6 +35,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.border.TitledBorder;
 import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
@@ -42,7 +45,6 @@ import dk.dma.ais.virtualnet.transponder.ITransponderStatusListener;
 import dk.dma.ais.virtualnet.transponder.Transponder;
 import dk.dma.ais.virtualnet.transponder.TransponderConfiguration;
 import dk.dma.ais.virtualnet.transponder.TransponderStatus;
-import dk.dma.commons.util.FormatUtil;
 
 /**
  * Transponder frame
@@ -78,7 +80,6 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JLabel serverStatusIconLabel = new JLabel();
     private final JLabel serverErrorLabel = new JLabel();
     private final JLabel ownShipPosIconLabel = new JLabel();
-    private final JLabel ownShipPosLabel = new JLabel();
 
     // Icons
     private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/UNKNOWN.png"));
@@ -90,7 +91,6 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
 
     private final List<JLabel> iconLabels = Arrays.asList(new JLabel[] { clientStatusIconLabel, serverStatusIconLabel,
             ownShipPosIconLabel });
-    private JPanel panel;
 
     public TransponderFrame() {
         this("transponder.xml");
@@ -99,13 +99,13 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public TransponderFrame(String conffile) {
         super();
         this.conffile = conffile;
-        setSize(new Dimension(500, 500));
+        setSize(new Dimension(412, 475));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("AisVirtualNet transponder");
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null);        
 
-        startButton.addActionListener(this);
-        stopButton.addActionListener(this);
+        startButton.addActionListener(this);        
+        stopButton.addActionListener(this);                
         selectVesselButton.addActionListener(this);
 
         for (JLabel iconLabel : iconLabels) {
@@ -136,13 +136,6 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         serverErrorLabel.setText(status.getServerError() != null ? status.getServerError() : "");
         // Own pos indicating
         ownShipPosIconLabel.setIcon(status.getOwnPos() != null ? OK_ICON : ERROR_ICON);
-        // Own position
-        String ownPosText = "N/A";
-        if (status.getOwnPos() != null) {
-            ownPosText = String.format(FormatUtil.latToPrintable(status.getOwnPos().getLatitude()) + " - "
-                    + FormatUtil.lonToPrintable(status.getOwnPos().getLongitude()));
-        }
-        ownShipPosLabel.setText(ownPosText);
     }
 
     /**
@@ -182,12 +175,10 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         setVal(username, conf.getUsername());
         setVal(password, conf.getPassword());
         setVal(port, conf.getPort());
-        setVal(receiveRadius, conf.getReceiveRadius() / 1852);
+        setVal(receiveRadius, conf.getReceiveRadius() / 1852);        
     }
 
     private void setVal(JTextField field, String val) {
-        mmsi.setBounds(47, 36, 122, 28);
-        panel.add(mmsi);
         field.setText(val);
     }
 
@@ -198,7 +189,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private void updateEnabled() {
         startButton.setEnabled(transponder == null);
         stopButton.setEnabled(transponder != null);
-        selectVesselButton.setEnabled(transponder != null);
+        selectVesselButton.setEnabled(transponder == null);
         for (JComponent comp : lockedWhileRunningComponents) {
             comp.setEnabled(transponder == null);
         }
@@ -206,6 +197,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             for (JLabel iconLabel : iconLabels) {
                 iconLabel.setIcon(UNKNOWN_ICON);
             }
+            serverErrorLabel.setText("");
         }
     }
 
@@ -234,7 +226,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         if (transponder != null) {
             LOG.error("Trying to start transponder already started");
             return;
-        }
+        }        
         try {
             updateConf();
         } catch (IllegalArgumentException e) {
@@ -248,6 +240,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             JOptionPane.showMessageDialog(this, e.getMessage(), "Transponder error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        saveConf();
         updateEnabled();
         // Make the GUI the listener of events
         transponder.getStatus().addListener(this);
@@ -284,50 +277,103 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             LOG.error("Failed to save configuration", e);
         }
     }
-
+    
     private void layoutGui() {        
         getContentPane().setLayout(null);
-        panel = new JPanel(null);
-        panel.setBounds(0, 6, 504, 486);
-        panel.setLayout(null);
         
         JPanel mmsiPanel = new JPanel();
-        mmsiPanel.setBounds(0, 178, 198, -178);
+        mmsiPanel.setBounds(6, 6, 400 ,66);
+        mmsiPanel.setLayout(null);
+        mmsiPanel.setBorder(new TitledBorder(null, "MMSI", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        mmsi.setBounds(16, 22, 105, 28);
+        mmsiPanel.add(mmsi);
+        selectVesselButton.setBounds(121, 23, 47, 29);
         mmsiPanel.add(selectVesselButton);
-        mmsiPanel.add(resendInterval);
-        panel.add(mmsiPanel);        
+        resendInterval.setBounds(344, 22, 38, 28);
+        mmsiPanel.add(resendInterval);        
+        JLabel omLbl = new JLabel("Own message interval (s)");
+        omLbl.setBounds(180, 28, 157, 16);
+        mmsiPanel.add(omLbl);
+        getContentPane().add(mmsiPanel);
         
-        JPanel serverPanel = new JPanel();        
-        serverPanel.setBounds(0, 0, 0, 0);
-        serverPanel.add(serverHost);
+        
+        JPanel serverPanel = new JPanel();
+        serverPanel.setLayout(null);
+        serverPanel.setBounds(6, 84, 400, 88);
+        serverPanel.setBorder(new TitledBorder(null, "Server", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        JLabel srvHostLbl = new JLabel("Host");
+        srvHostLbl.setBounds(16, 23, 37, 16);
+        serverPanel.add(srvHostLbl);
+        JLabel srvPortLbl = new JLabel("Port");
+        srvPortLbl.setBounds(291, 20, 37, 16);
+        serverPanel.add(srvPortLbl);
+        serverPort.setBounds(324, 17, 58, 22);
         serverPanel.add(serverPort);
+        JLabel usernameLbl = new JLabel("Username");
+        serverPanel.add(usernameLbl);
+        usernameLbl.setBounds(16, 53, 69, 16);
+        username.setBounds(89, 50, 115, 22);
         serverPanel.add(username);
+        JLabel passwordLbl = new JLabel("Password");
+        passwordLbl.setBounds(216, 50, 69, 16);
+        serverPanel.add(passwordLbl);
+        password.setBounds(280, 47, 102, 22);
         serverPanel.add(password);
-        panel.add(serverPanel);
+        getContentPane().add(serverPanel);
+        serverHost.setBounds(89, 20, 190, 22);
+        serverPanel.add(serverHost);
         
         JPanel transponderPanel = new JPanel();
-        transponderPanel.setBounds(0, 0, 0, 0);
+        transponderPanel.setBorder(new TitledBorder(null, "Transponder", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        transponderPanel.setLayout(null);
+        transponderPanel.setBounds(6, 184, 400, 60);
+        JLabel portLbl = new JLabel("Port");
+        portLbl.setBounds(16, 23, 34, 16);
+        transponderPanel.add(portLbl);
+        JLabel radiusLbl = new JLabel("Receive radius (nm)");
+        radiusLbl.setBounds(119, 23, 127, 16);
+        transponderPanel.add(radiusLbl);
+        port.setBounds(49, 20, 58, 22);
         transponderPanel.add(port);
+        receiveRadius.setBounds(247, 20, 58, 22);
         transponderPanel.add(receiveRadius);
-        panel.add(transponderPanel);
+        getContentPane().add(transponderPanel);
         
         JPanel statusPanel = new JPanel();
-        statusPanel.setBounds(0, 0, 0, 0);
+        statusPanel.setLayout(null);
+        statusPanel.setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        statusPanel.setBounds(6, 256, 400, 97);
+        JLabel clientLbl = new JLabel("Client connection");
+        clientLbl.setBounds(16, 44, 117, 16);
+        statusPanel.add(clientLbl);
         statusPanel.add(clientStatusIconLabel);
+        clientStatusIconLabel.setBounds(145, 44, 16, 16);
+        JLabel serverLbl = new JLabel("Server connection");
+        serverLbl.setBounds(16, 23, 117, 16);
+        statusPanel.add(serverLbl);
+        serverStatusIconLabel.setBounds(145, 23, 16, 16);
         statusPanel.add(serverStatusIconLabel);
+        serverErrorLabel.setForeground(Color.RED);
+        serverErrorLabel.setText("Error when connecting to server");
+        serverErrorLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+        serverErrorLabel.setBounds(182, 25, 200, 15);
         statusPanel.add(serverErrorLabel);
+        JLabel ownPosLbl = new JLabel("Own position");
+        ownPosLbl.setBounds(16, 66, 117, 16);
+        statusPanel.add(ownPosLbl);
+        ownShipPosIconLabel.setBounds(145, 66, 16, 16);
         statusPanel.add(ownShipPosIconLabel);
-        statusPanel.add(ownShipPosLabel);
-        panel.add(statusPanel);
+        getContentPane().add(statusPanel);
 
         JPanel controlPanel = new JPanel();
-        controlPanel.setBounds(0, 0, 0, 0);
+        controlPanel.setBorder(new TitledBorder(null, "Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        controlPanel.setBounds(6, 365, 400, 75);
+        controlPanel.setLayout(null);
+        startButton.setBounds(6, 25, 75, 29);
         controlPanel.add(startButton);
+        stopButton.setBounds(87, 25, 75, 29);
         controlPanel.add(stopButton);
-        panel.add(controlPanel);
-        
-        getContentPane().add(panel);
+        getContentPane().add(controlPanel);
     }
-
 
 }

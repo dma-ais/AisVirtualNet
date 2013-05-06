@@ -10,6 +10,16 @@ Step 1:
 Step 2:
 -------------------------
 
++ Own pos fail update event (is that fired as a status update?)
+
++ Select target dialog
+
++ Anonymous: Random country + counter
+
++ Anonymous: Option to use random name file
+
++ Anonymous: Random callsign (UUID)
+
 + Server:Rest API with services to get list of targets
 	Status of server, connected clients etc
 
@@ -17,12 +27,8 @@ Step 2:
 
 + Investiage why server blocks on shutdown
 
-+ Investigate if we are allowed to use a dump of a restricted area to public use
 
-+ Own message resender cache of all position reports
-	Seems impossible as resender is destroyed when settings are changed
-	Get from cache when sending (do transformation and replace in cache)
-	Maybe last received for all targets is also needed to allow timeout
++ Investigate if we are allowed to use a dump of a restricted area to public use
 
 + Time stamping in stream option (Maybe GPS message see EPD-ship)
 

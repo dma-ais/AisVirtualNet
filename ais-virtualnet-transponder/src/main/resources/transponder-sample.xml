@@ -4,7 +4,7 @@
     <ownPosInterval>5</ownPosInterval>
     <password>julemand</password>
     <port>8001</port>
-    <receiveRadius>10000</receiveRadius>
+    <receiveRadius>9260</receiveRadius>
     <serverHost>localhost</serverHost>
     <serverPort>8080</serverPort>
     <username>ole</username>
