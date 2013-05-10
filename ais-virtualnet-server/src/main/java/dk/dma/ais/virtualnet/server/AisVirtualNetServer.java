@@ -40,6 +40,7 @@ import dk.dma.ais.bus.AisBus;
 import dk.dma.ais.bus.consumer.DistributerConsumer;
 import dk.dma.ais.bus.provider.CollectorProvider;
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.virtualnet.common.message.StatusMessage;
 import dk.dma.ais.virtualnet.common.table.TargetTable;
 import dk.dma.ais.virtualnet.server.rest.AisVirtualNetServerProvider;
 import dk.dma.enav.util.function.Consumer;
@@ -55,6 +56,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     private final AisBus aisBus;
     private final Server server;
     private final CollectorProvider collector = new CollectorProvider();
+    private final DistributerConsumer distributer = new DistributerConsumer();
     private final TargetTable targetTable = new TargetTable();
     private final Authenticator authenticator;
     private final MmsiBroker mmsiBroker;
@@ -101,15 +103,20 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         
         // Create AisBus
         aisBus = conf.getAisbusConfiguration().getInstance();
-        // Create distributor consumer and add to aisBus
-        DistributerConsumer distributer = new DistributerConsumer();
+        // Initialize distributer and register in aisbus
         distributer.getConsumers().add(this);
         distributer.init();
         aisBus.registerConsumer(distributer);
         // Initialize collector and register in aisbus        
         collector.init();
-        aisBus.registerProvider(collector);
-        
+        aisBus.registerProvider(collector);        
+    }
+    
+    public StatusMessage getStatus() {
+        StatusMessage message = new StatusMessage();
+        message.setMessageRate(distributer.getStatus().getInRate());
+        message.setConnectedClients(clients.size());
+        return message;
     }
     
     /**
@@ -188,11 +195,6 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         }
         
         this.interrupt();
-        try {
-            this.join(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

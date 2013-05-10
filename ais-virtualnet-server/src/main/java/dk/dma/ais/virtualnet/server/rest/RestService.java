@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.virtualnet.common.message.AuthenticationReplyMessage;
 import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage;
+import dk.dma.ais.virtualnet.common.message.StatusMessage;
 import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
 import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage.ReserveResult;
 import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
@@ -43,11 +44,12 @@ public class RestService {
     private AisVirtualNetServer server;
     
     @GET
-    @Path("test")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String test() {
-        return "status=OK";
+    @Path("status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public StatusMessage status() {
+        return server.getStatus();
     }
+
 
     @GET
     @Path("target_table")

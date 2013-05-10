@@ -5,6 +5,9 @@ TODO
 Step 2:
 -------------------------
 
++ Server:Rest API with services to get list of targets
+	Status of server, connected clients etc
+	
 + GUI: Exit button and not close on exit (if not using embedded setting)
 	Exit must shutdown before exit
 
@@ -21,24 +24,19 @@ Step 2:
 
 + Anonymous: Random callsign (UUID)
 
-+ Server:Rest API with services to get list of targets
-	Status of server, connected clients etc
 
-+ Reduce stacktrace dumps
+
 
 + Investiage why server blocks on shutdown
 
 
-+ Investigate if we are allowed to use a dump of a restricted area to public use
-
-+ Time stamping in stream option (Maybe GPS message see EPD-ship)
+Later 
+-------------------------
 
 + Documentation
 
 + Setup on cloudbees
 
-Later 
--------------------------
++ Time stamping in stream option (Maybe GPS message see EPD-ship)
 
-
-
++ Reduce stacktrace dumps
