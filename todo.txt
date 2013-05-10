@@ -5,12 +5,11 @@ TODO
 Step 2:
 -------------------------
 
-
 + Anonymous: Random country + counter
 
-+ Anonymous: Option to use random name file
++ Anonymous: Option to use random name file for names
 
-+ Anonymous: Random callsign (UUID)
++ Anonymous: Random callsign (UUID) (max 6 chars)
 
 + Install on server
 
