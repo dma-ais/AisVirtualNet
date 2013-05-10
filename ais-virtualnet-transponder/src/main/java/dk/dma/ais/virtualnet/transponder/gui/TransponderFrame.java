@@ -445,6 +445,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
                 stopTransponder();
             }
             this.dispose();
+            System.exit(0);
         }
     }
 

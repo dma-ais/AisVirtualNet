@@ -5,11 +5,24 @@ TODO
 Step 2:
 -------------------------
 
-+ Server:Rest API with services to get list of targets
-	Status of server, connected clients etc
-	
-+ GUI: Exit button and not close on exit (if not using embedded setting)
-	Exit must shutdown before exit
+
++ Anonymous: Random country + counter
+
++ Anonymous: Option to use random name file
+
++ Anonymous: Random callsign (UUID)
+
++ Install on server
+
++ Assembly file for transponder
+
++ Upload builded versions on Github
+
++ Public version
+
+
+Later 
+-------------------------
 
 + Maybe dangerous senteces like PSTT that needs to be removed
 	Take out timestamp
@@ -18,21 +31,6 @@ Step 2:
 + Maybe VDO converter needs to be able to convert BS -> AI
 	(Talker transformer)
 
-+ Anonymous: Random country + counter
-
-+ Anonymous: Option to use random name file
-
-+ Anonymous: Random callsign (UUID)
-
-
-
-
-+ Investiage why server blocks on shutdown
-
-
-Later 
--------------------------
-
 + Documentation
 
 + Setup on cloudbees
@@ -40,3 +38,4 @@ Later
 + Time stamping in stream option (Maybe GPS message see EPD-ship)
 
 + Reduce stacktrace dumps
+

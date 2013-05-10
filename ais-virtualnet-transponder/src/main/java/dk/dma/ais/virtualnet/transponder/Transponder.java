@@ -180,6 +180,11 @@ public class Transponder extends Thread {
 
     public void shutdown() {
         ownMessage.interrupt();
+        try {
+            ownMessage.join(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();            
+        }
         this.interrupt();
         serverConnection.shutdown();
         if (socket != null) {
@@ -213,7 +218,7 @@ public class Transponder extends Thread {
                 if (!isInterrupted()) {
                     LOG.error("Failed to accept client connection", e);
                 }
-                return;
+                break;
             }
 
             try {
@@ -229,8 +234,8 @@ public class Transponder extends Thread {
             }
 
             LOG.info("Lost connection to client");
-
         }
+        LOG.info("Transponder stopped");
     }
 
     private void readFromAI() throws IOException {

@@ -188,13 +188,23 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         } catch (Exception e) {
             LOG.error("Failed to stop web server", e);
         }
-        aisBus.cancel();
+        
+        if (aisBus != null) {
+            aisBus.cancel();
+        }
         
         for (WebSocketServerSession client : clients) {
             client.close();
         }
         
         this.interrupt();
+        try {
+            this.join(10000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 
     @Override

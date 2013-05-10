@@ -68,6 +68,11 @@ public class ServerConnection extends Thread {
         if (session != null) {
             session.close();
         }
+        try {
+            this.join(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public TransponderConfiguration getConf() {
