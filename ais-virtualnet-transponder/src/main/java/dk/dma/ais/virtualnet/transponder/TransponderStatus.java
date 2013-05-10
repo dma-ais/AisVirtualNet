@@ -30,6 +30,7 @@ public class TransponderStatus {
     private boolean clientConnected;
     private boolean serverConnected;
     private String serverError;
+    private String shipName = "";
 
     private final CopyOnWriteArraySet<ITransponderStatusListener> listeners = new CopyOnWriteArraySet<>();
 
@@ -83,6 +84,17 @@ public class TransponderStatus {
     public void setServerError(String serverError) {
         synchronized (this) {
             this.serverError = serverError;
+        }
+        notifyListeners();
+    }
+
+    public synchronized String getShipName() {
+        return shipName;
+    }
+
+    public void setShipName(String shipName) {
+        synchronized (this) {
+            this.shipName = shipName;
         }
         notifyListeners();
     }

@@ -41,7 +41,9 @@ import javax.xml.bind.JAXBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
 import dk.dma.ais.virtualnet.transponder.ITransponderStatusListener;
+import dk.dma.ais.virtualnet.transponder.RestException;
 import dk.dma.ais.virtualnet.transponder.Transponder;
 import dk.dma.ais.virtualnet.transponder.TransponderConfiguration;
 import dk.dma.ais.virtualnet.transponder.TransponderStatus;
@@ -80,6 +82,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JLabel serverStatusIconLabel = new JLabel();
     private final JLabel serverErrorLabel = new JLabel();
     private final JLabel ownShipPosIconLabel = new JLabel();
+    private final JLabel shipNameLbl = new JLabel();    
 
     // Icons
     private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/UNKNOWN.png"));
@@ -99,7 +102,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public TransponderFrame(String conffile) {
         super();
         this.conffile = conffile;
-        setSize(new Dimension(412, 475));
+        setSize(new Dimension(412, 500));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("AisVirtualNet transponder");
         setLocationRelativeTo(null);        
@@ -136,6 +139,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         serverErrorLabel.setText(status.getServerError() != null ? status.getServerError() : "");
         // Own pos indicating
         ownShipPosIconLabel.setIcon(status.getOwnPos() != null ? OK_ICON : ERROR_ICON);
+        // Own ship name
+        shipNameLbl.setText(status.getShipName());
     }
 
     /**
@@ -198,7 +203,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
                 iconLabel.setIcon(UNKNOWN_ICON);
             }
             serverErrorLabel.setText("");
-        }
+            shipNameLbl.setText("");
+        }        
     }
 
     @Override
@@ -218,7 +224,24 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         } else if (e.getSource() == stopButton) {
             stopTransponder();
         } else if (e.getSource() == selectVesselButton) {
-            JOptionPane.showMessageDialog(this, "TBD");
+            selectTarget();
+        }
+    }
+    
+    private void selectTarget() {
+        TargetTableMessage targets;
+        try {
+            targets = Transponder.getTargets(conf.getServerHost(), conf.getServerPort(), conf.getUsername(), conf.getPassword());
+        } catch (RestException e) {
+            LOG.error("Failed to get list of targets");
+            JOptionPane.showMessageDialog(this, "Failed to get list of targets: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        SelectTargetDialog selectTargetDialog = new SelectTargetDialog(this, targets);
+        selectTargetDialog.setVisible(true);
+        if (selectTargetDialog.getSelectedTarget() != null) {
+            conf.setOwnMmsi(selectTargetDialog.getSelectedTarget().intValue());
+            updateValues();
         }
     }
 
@@ -342,7 +365,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         JPanel statusPanel = new JPanel();
         statusPanel.setLayout(null);
         statusPanel.setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        statusPanel.setBounds(6, 256, 400, 97);
+        statusPanel.setBounds(6, 256, 400, 123);
         JLabel clientLbl = new JLabel("Client connection");
         clientLbl.setBounds(16, 44, 117, 16);
         statusPanel.add(clientLbl);
@@ -363,11 +386,16 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         statusPanel.add(ownPosLbl);
         ownShipPosIconLabel.setBounds(145, 66, 16, 16);
         statusPanel.add(ownShipPosIconLabel);
+        JLabel nameLbl = new JLabel("Ship name");
+        nameLbl.setBounds(16, 89, 117, 16);
+        statusPanel.add(nameLbl);        
+        shipNameLbl.setBounds(145, 89, 237, 16);
+        statusPanel.add(shipNameLbl);
         getContentPane().add(statusPanel);
 
         JPanel controlPanel = new JPanel();
         controlPanel.setBorder(new TitledBorder(null, "Controls", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        controlPanel.setBounds(6, 365, 400, 75);
+        controlPanel.setBounds(6, 391, 400, 75);
         controlPanel.setLayout(null);
         startButton.setBounds(6, 25, 75, 29);
         controlPanel.add(startButton);

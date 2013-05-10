@@ -33,6 +33,7 @@ import dk.dma.ais.message.AisMessage;
 import dk.dma.ais.message.AisMessage6;
 import dk.dma.ais.message.AisMessage7;
 import dk.dma.ais.message.AisMessageException;
+import dk.dma.ais.message.AisStaticCommon;
 import dk.dma.ais.message.IVesselPositionMessage;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.sentence.Abk;
@@ -41,6 +42,7 @@ import dk.dma.ais.sentence.Bbm;
 import dk.dma.ais.sentence.Sentence;
 import dk.dma.ais.sentence.SentenceException;
 import dk.dma.ais.sentence.Vdm;
+import dk.dma.ais.transform.CropVdmTransformer;
 import dk.dma.ais.transform.VdmVdoTransformer;
 import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
 import dk.dma.enav.model.geometry.Position;
@@ -59,6 +61,7 @@ public class Transponder extends Thread {
     private final ServerSocket serverSocket;
     private final TransponderOwnMessage ownMessage;
     private final VdmVdoTransformer vdoTransformer;
+    private final CropVdmTransformer cropTransformer;
 
     private volatile Socket socket;
     private volatile PrintWriter out;
@@ -74,6 +77,7 @@ public class Transponder extends Thread {
         serverSocket = new ServerSocket(conf.getPort());
         ownMessage = new TransponderOwnMessage(this, conf.getOwnPosInterval());
         vdoTransformer = new VdmVdoTransformer(conf.getOwnMmsi());
+        cropTransformer = new CropVdmTransformer();
     }
 
     /**
@@ -82,9 +86,6 @@ public class Transponder extends Thread {
      * @param packet
      */
     public void receive(String strPacket) {
-        if (!status.isClientConnected()) {
-            return;
-        }
         // Make packet and get ais message
         AisPacket packet = AisPacket.from(strPacket);
         AisMessage message;
@@ -94,19 +95,37 @@ public class Transponder extends Thread {
             LOG.info("Failed to parse message: " + e.getMessage());
             return;
         }
-        // Maybe own
+
+        // Determine own
         boolean own = message.getUserId() == conf.getOwnMmsi();
+
         // Convert to VDO or VDM
         packet = vdoTransformer.transform(packet);
         if (packet == null) {
             LOG.error("Failed to convert packet " + strPacket);
             return;
         }
+
+        // Crop everything else that VDM/VDO
+        packet = cropTransformer.transform(packet);
+        if (packet == null) {
+            LOG.error("Failed to crop packet " + strPacket);
+            return;
+        }
+
         // Maybe the transponder needs to send a binary acknowledge back to the network
         if (message.getMsgId() == 6) {
             AisMessage6 msg6 = (AisMessage6) message;
             if (msg6.getDestination() == conf.getOwnMmsi()) {
                 sendBinAck(msg6);
+            }
+        }
+
+        // Get name from own static
+        if (own && message instanceof AisStaticCommon) {
+            String name = ((AisStaticCommon) message).getName();
+            if (name != null) {
+                status.setShipName(name);
             }
         }
 
@@ -134,7 +153,10 @@ public class Transponder extends Thread {
             }
         }
 
-        send(packet.getStringMessage());
+        if (status.isClientConnected()) {
+            send(packet.getStringMessage());
+        }
+
     }
 
     /**

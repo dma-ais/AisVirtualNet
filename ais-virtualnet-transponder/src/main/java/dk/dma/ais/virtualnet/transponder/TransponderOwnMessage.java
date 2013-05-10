@@ -70,6 +70,9 @@ public class TransponderOwnMessage extends Thread {
         // Send if not too old
         if (elapsed < MESSAGE_MAX_AGE) {
             transponder.send(ownPacket.getStringMessage());
+        } else {
+            // Has become too old
+            transponder.getStatus().setOwnPos(null);
         }
     }
 

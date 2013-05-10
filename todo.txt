@@ -1,18 +1,21 @@
 TODO
 ====
 
-Step 1:
--------------------------
-
-+ Design and implement GUI
-	Start with simple layout just to focus on functionality 
 
 Step 2:
 -------------------------
 
-+ Own pos fail update event (is that fired as a status update?)
-
 + Select target dialog
+
++ GUI: Exit button and not close on exit (if not using embedded setting)
+	Exit must shutdown before exit
+
++ Maybe dangerous senteces like PSTT that needs to be removed
+	Take out timestamp
+	Crop to VDM's (CropTransformer)
+
++ Maybe VDO converter needs to be able to convert BS -> AI
+	(Talker transformer)
 
 + Anonymous: Random country + counter
 
