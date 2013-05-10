@@ -24,7 +24,7 @@ import dk.dma.ais.virtualnet.common.table.TargetTableEntry;
 
 @XmlRootElement
 public class TargetTableMessage {
-       
+    
     private List<TargetTableEntry> targets = new ArrayList<>();
     
     public TargetTableMessage() {

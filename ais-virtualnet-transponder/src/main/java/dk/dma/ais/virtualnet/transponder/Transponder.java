@@ -125,7 +125,7 @@ public class Transponder extends Thread {
         if (own && message instanceof AisStaticCommon) {
             String name = ((AisStaticCommon) message).getName();
             if (name != null) {
-                status.setShipName(name);
+                status.setShipName(AisMessage.trimText(name));
             }
         }
 

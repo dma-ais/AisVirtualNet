@@ -56,9 +56,9 @@ public class TransponderGUI extends AbstractCommandLineTool {
 
         TransponderFrame frame = new TransponderFrame(confFile);
         frame.setVisible(true);
-        
-        frame.startTransponder();
-        
+
+        // frame.startTransponder();
+
     }
 
     public static void main(String[] args) throws Exception {

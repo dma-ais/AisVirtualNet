@@ -5,8 +5,6 @@ TODO
 Step 2:
 -------------------------
 
-+ Select target dialog
-
 + GUI: Exit button and not close on exit (if not using embedded setting)
 	Exit must shutdown before exit
 
@@ -38,5 +36,9 @@ Step 2:
 + Documentation
 
 + Setup on cloudbees
+
+Later 
+-------------------------
+
 
 

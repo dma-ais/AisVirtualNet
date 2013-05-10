@@ -16,13 +16,17 @@
 package dk.dma.ais.virtualnet.transponder.gui;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -35,6 +39,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.border.TitledBorder;
 import javax.xml.bind.JAXBException;
 
@@ -42,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
+import dk.dma.ais.virtualnet.common.table.TargetTableEntry;
 import dk.dma.ais.virtualnet.transponder.ITransponderStatusListener;
 import dk.dma.ais.virtualnet.transponder.RestException;
 import dk.dma.ais.virtualnet.transponder.Transponder;
@@ -51,13 +57,14 @@ import dk.dma.ais.virtualnet.transponder.TransponderStatus;
 /**
  * Transponder frame
  */
-public class TransponderFrame extends JFrame implements ActionListener, ITransponderStatusListener {
+public class TransponderFrame extends JFrame implements ActionListener, ITransponderStatusListener, WindowListener {
 
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(TransponderFrame.class);
 
     private final String conffile;
+    private final boolean embedded;
 
     private Transponder transponder;
     private TransponderConfiguration conf;
@@ -65,6 +72,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     // Control buttons
     private final JButton startButton = new JButton("Start");
     private final JButton stopButton = new JButton("Stop");
+    private final JButton exitButton = new JButton("Exit");
     private final JButton selectVesselButton = new JButton("...");
 
     // Input fields
@@ -82,13 +90,13 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     private final JLabel serverStatusIconLabel = new JLabel();
     private final JLabel serverErrorLabel = new JLabel();
     private final JLabel ownShipPosIconLabel = new JLabel();
-    private final JLabel shipNameLbl = new JLabel();    
+    private final JLabel shipNameLbl = new JLabel();
 
     // Icons
     private static final ImageIcon UNKNOWN_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/UNKNOWN.png"));
     private static final ImageIcon ERROR_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/ERROR.png"));
     private static final ImageIcon OK_ICON = new ImageIcon(TransponderFrame.class.getResource("/images/OK.png"));
-    
+
     private final List<JComponent> lockedWhileRunningComponents = Arrays.asList(new JComponent[] { mmsi, resendInterval,
             serverHost, serverPort, username, password, port, receiveRadius });
 
@@ -100,20 +108,26 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     }
 
     public TransponderFrame(String conffile) {
+        this(conffile, false);
+    }
+
+    public TransponderFrame(String conffile, boolean embedded) {
         super();
         this.conffile = conffile;
+        this.embedded = embedded;
         setSize(new Dimension(412, 500));
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        addWindowListener(this);
+
         setTitle("AisVirtualNet transponder");
-        setLocationRelativeTo(null);        
+        setLocationRelativeTo(null);
 
-        startButton.addActionListener(this);        
-        stopButton.addActionListener(this);                
+        startButton.addActionListener(this);
+        stopButton.addActionListener(this);
         selectVesselButton.addActionListener(this);
-
-        for (JLabel iconLabel : iconLabels) {
-            iconLabel.setIcon(UNKNOWN_ICON);
-        }
+        exitButton.addActionListener(this);
+        exitButton.setVisible(!embedded);
 
         layoutGui();
 
@@ -123,6 +137,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         // Update GUI components with configuration values
         updateValues();
 
+        // Update controls
+        updateEnabled();
     }
 
     /**
@@ -180,7 +196,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         setVal(username, conf.getUsername());
         setVal(password, conf.getPassword());
         setVal(port, conf.getPort());
-        setVal(receiveRadius, conf.getReceiveRadius() / 1852);        
+        setVal(receiveRadius, conf.getReceiveRadius() / 1852);
     }
 
     private void setVal(JTextField field, String val) {
@@ -204,7 +220,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             }
             serverErrorLabel.setText("");
             shipNameLbl.setText("");
-        }        
+        }
     }
 
     @Override
@@ -225,18 +241,33 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             stopTransponder();
         } else if (e.getSource() == selectVesselButton) {
             selectTarget();
+        } else if (e.getSource() == exitButton) {
+            shutdown();
         }
+
     }
-    
+
     private void selectTarget() {
-        TargetTableMessage targets;
+        Cursor currentCursor = getCursor();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        TargetTableMessage message;
         try {
-            targets = Transponder.getTargets(conf.getServerHost(), conf.getServerPort(), conf.getUsername(), conf.getPassword());
+            message = Transponder.getTargets(conf.getServerHost(), conf.getServerPort(), conf.getUsername(), conf.getPassword());
         } catch (RestException e) {
             LOG.error("Failed to get list of targets");
-            JOptionPane.showMessageDialog(this, "Failed to get list of targets: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to get list of targets: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            setCursor(currentCursor);
             return;
         }
+        setCursor(currentCursor);
+
+        // Sort by name
+        List<TargetTableEntry> targets = message.getTargets();
+        Collections.sort(targets, new TargetTableEntry.NameSort());
+
+        // Show select dialog
         SelectTargetDialog selectTargetDialog = new SelectTargetDialog(this, targets);
         selectTargetDialog.setVisible(true);
         if (selectTargetDialog.getSelectedTarget() != null) {
@@ -249,7 +280,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         if (transponder != null) {
             LOG.error("Trying to start transponder already started");
             return;
-        }        
+        }
         try {
             updateConf();
         } catch (IllegalArgumentException e) {
@@ -300,12 +331,12 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             LOG.error("Failed to save configuration", e);
         }
     }
-    
-    private void layoutGui() {        
+
+    private void layoutGui() {
         getContentPane().setLayout(null);
-        
+
         JPanel mmsiPanel = new JPanel();
-        mmsiPanel.setBounds(6, 6, 400 ,66);
+        mmsiPanel.setBounds(6, 6, 400, 66);
         mmsiPanel.setLayout(null);
         mmsiPanel.setBorder(new TitledBorder(null, "MMSI", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         mmsi.setBounds(16, 22, 105, 28);
@@ -313,13 +344,12 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         selectVesselButton.setBounds(121, 23, 47, 29);
         mmsiPanel.add(selectVesselButton);
         resendInterval.setBounds(344, 22, 38, 28);
-        mmsiPanel.add(resendInterval);        
+        mmsiPanel.add(resendInterval);
         JLabel omLbl = new JLabel("Own message interval (s)");
         omLbl.setBounds(180, 28, 157, 16);
         mmsiPanel.add(omLbl);
         getContentPane().add(mmsiPanel);
-        
-        
+
         JPanel serverPanel = new JPanel();
         serverPanel.setLayout(null);
         serverPanel.setBounds(6, 84, 400, 88);
@@ -345,7 +375,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         getContentPane().add(serverPanel);
         serverHost.setBounds(89, 20, 190, 22);
         serverPanel.add(serverHost);
-        
+
         JPanel transponderPanel = new JPanel();
         transponderPanel.setBorder(new TitledBorder(null, "Transponder", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         transponderPanel.setLayout(null);
@@ -361,7 +391,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         receiveRadius.setBounds(247, 20, 58, 22);
         transponderPanel.add(receiveRadius);
         getContentPane().add(transponderPanel);
-        
+
         JPanel statusPanel = new JPanel();
         statusPanel.setLayout(null);
         statusPanel.setBorder(new TitledBorder(null, "Status", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -377,7 +407,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         serverStatusIconLabel.setBounds(145, 23, 16, 16);
         statusPanel.add(serverStatusIconLabel);
         serverErrorLabel.setForeground(Color.RED);
-        serverErrorLabel.setText("Error when connecting to server");
+        serverErrorLabel.setText("");
         serverErrorLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         serverErrorLabel.setBounds(182, 25, 200, 15);
         statusPanel.add(serverErrorLabel);
@@ -388,7 +418,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         statusPanel.add(ownShipPosIconLabel);
         JLabel nameLbl = new JLabel("Ship name");
         nameLbl.setBounds(16, 89, 117, 16);
-        statusPanel.add(nameLbl);        
+        statusPanel.add(nameLbl);
         shipNameLbl.setBounds(145, 89, 237, 16);
         statusPanel.add(shipNameLbl);
         getContentPane().add(statusPanel);
@@ -402,6 +432,49 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         stopButton.setBounds(87, 25, 75, 29);
         controlPanel.add(stopButton);
         getContentPane().add(controlPanel);
+        exitButton.setBounds(319, 25, 75, 29);
+        controlPanel.add(exitButton);
+    }
+
+    public void shutdown() {
+        saveConf();
+        if (embedded) {
+            this.setVisible(false);
+        } else {
+            if (transponder != null) {
+                stopTransponder();
+            }
+            this.dispose();
+        }
+    }
+
+    @Override
+    public void windowClosing(WindowEvent e) {
+        shutdown();
+    }
+
+    @Override
+    public void windowOpened(WindowEvent e) {
+    }
+
+    @Override
+    public void windowClosed(WindowEvent e) {
+    }
+
+    @Override
+    public void windowIconified(WindowEvent e) {
+    }
+
+    @Override
+    public void windowDeiconified(WindowEvent e) {
+    }
+
+    @Override
+    public void windowActivated(WindowEvent e) {
+    }
+
+    @Override
+    public void windowDeactivated(WindowEvent e) {
     }
 
 }
