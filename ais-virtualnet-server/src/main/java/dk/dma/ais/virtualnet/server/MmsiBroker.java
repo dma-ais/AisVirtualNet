@@ -36,32 +36,6 @@ public class MmsiBroker {
      */
     private static final long ACTIVATE_TIME = 60 * 1000; // 1 min
 
-    private class Booking {
-        private final long created;
-        private long activated;
-
-        public Booking() {
-            this.created = System.currentTimeMillis();
-        }
-
-        public void activate() {
-            this.activated = System.currentTimeMillis();
-        }
-
-        public boolean isActivated() {
-            return activated > 0;
-        }
-
-        public boolean isReserved() {
-            if (isActivated()) {
-                return true;
-            }
-            long reserveAge = created - System.currentTimeMillis();
-            return reserveAge < ACTIVATE_TIME;
-        }
-
-    }
-
     /**
      * Map from mmsi to booking
      */
@@ -76,7 +50,7 @@ public class MmsiBroker {
     private final TargetTable targetTable;
 
     public MmsiBroker(TargetTable targetTable) {
-        this.targetTable = targetTable;  
+        this.targetTable = targetTable;
     }
 
     /**
@@ -126,7 +100,7 @@ public class MmsiBroker {
         booking.activate();
         return true;
     }
-    
+
     public synchronized void release(String authToken) {
         LOG.info("Release mmsi authToken: " + authToken);
         Integer mmsi = authTokenMmsiMap.get(authToken);
@@ -140,6 +114,32 @@ public class MmsiBroker {
             return;
         }
         mmsiBookingMap.remove(mmsi);
+    }
+
+    private class Booking {
+        private final long created;
+        private long activated;
+
+        public Booking() {
+            this.created = System.currentTimeMillis();
+        }
+
+        public void activate() {
+            this.activated = System.currentTimeMillis();
+        }
+
+        public boolean isActivated() {
+            return activated > 0;
+        }
+
+        public boolean isReserved() {
+            if (isActivated()) {
+                return true;
+            }
+            long reserveAge = created - System.currentTimeMillis();
+            return reserveAge < ACTIVATE_TIME;
+        }
+
     }
 
 }

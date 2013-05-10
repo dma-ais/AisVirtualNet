@@ -31,28 +31,6 @@ import dk.dma.enav.model.geometry.Position;
 public class TargetTableEntry {
 
     /**
-     * Comparator for doing name sorting
-     */
-    public static class NameSort implements Comparator<TargetTableEntry> {
-        @Override
-        public int compare(TargetTableEntry e1, TargetTableEntry e2) {
-            // The string comparison (no name lowest order)
-            int nc;
-            if (e1.getName() == null) {
-                nc = e2.getName() == null ? 0 : 1;
-            } else {
-                nc = e2.getName() == null ? -1 : e1.getName().compareTo(e2.getName());
-            }
-            if (nc != 0) {
-                return nc;
-            }
-            // Compare mmsi
-            return Integer.compare(e1.getMmsi(), e2.getMmsi());
-        }
-        
-    }
-    
-    /**
      * Default time a target is considered to be alive
      */
     private static final int DEFAULT_TTL = 10 * 60 * 1000;  // 10 min
@@ -139,4 +117,26 @@ public class TargetTableEntry {
         return (name != null ? name : "N/A") + " (" + Integer.toString(mmsi) + ")";
     }
     
+    /**
+     * Comparator for doing name sorting
+     */
+    public static class NameSort implements Comparator<TargetTableEntry> {
+        @Override
+        public int compare(TargetTableEntry e1, TargetTableEntry e2) {
+            // The string comparison (no name lowest order)
+            int nc;
+            if (e1.getName() == null) {
+                nc = e2.getName() == null ? 0 : 1;
+            } else {
+                nc = e2.getName() == null ? -1 : e1.getName().compareTo(e2.getName());
+            }
+            if (nc != 0) {
+                return nc;
+            }
+            // Compare mmsi
+            return Integer.compare(e1.getMmsi(), e2.getMmsi());
+        }
+        
+    }    
+
 }

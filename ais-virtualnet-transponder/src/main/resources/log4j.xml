@@ -35,18 +35,6 @@
 		</layout>
 	</appender>
 	
-	<!-- DEBUG LOG  -->
-	<appender name="DEBUGFILE" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="log/server-debug.log" />
-		<param name="Append" value="true" />
-		<param name="MaxFileSize" value="1024KB" />
-		<param name="Threshold" value="DEBUG" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d %-5p [%c{1}] %m%n" />
-		</layout>
-	</appender>
-	
-
 	<logger name="dk.dma.ais.reader">
 		<level value="ERROR" />
 	</logger>
@@ -55,7 +43,6 @@
 		<appender-ref ref="CONSOLE" />
 		<appender-ref ref="LOGFILE" />
 		<appender-ref ref="ERRORFILE" />
-		<appender-ref ref="DEBUGFILE" />
 	</root>
 
 </log4j:configuration>
