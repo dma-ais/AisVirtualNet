@@ -9,13 +9,6 @@ Step 2:
 
 + Ais dump file
 
-+ Assembly file for transponder
-
-+ Upload builded versions on Github
-
-+ Public version
-
-
 Later 
 -------------------------
 
@@ -28,7 +21,6 @@ Later
 
 + Documentation
 
-+ Setup on cloudbees
 
 + Time stamping in stream option (Maybe GPS message see EPD-ship)
 

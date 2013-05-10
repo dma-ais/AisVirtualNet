@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <transponderConfiguration>
-    <ownMmsi>219001065</ownMmsi>
+    <ownMmsi>359000003</ownMmsi>
     <ownPosInterval>1</ownPosInterval>
     <password>julemand</password>
     <port>8001</port>
