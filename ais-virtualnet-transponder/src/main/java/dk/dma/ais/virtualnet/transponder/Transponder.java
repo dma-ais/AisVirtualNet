@@ -106,7 +106,7 @@ public class Transponder extends Thread {
             return;
         }
 
-        // Crop everything else that VDM/VDO
+        // Crop to VDM/VDO
         packet = cropTransformer.transform(packet);
         if (packet == null) {
             LOG.error("Failed to crop packet " + strPacket);
