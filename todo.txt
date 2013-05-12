@@ -12,15 +12,10 @@ Step 2:
 Later 
 -------------------------
 
-+ Maybe dangerous senteces like PSTT that needs to be removed
-	Take out timestamp
-	Crop to VDM's (CropTransformer)
-
 + Maybe VDO converter needs to be able to convert BS -> AI
 	(Talker transformer)
 
 + Documentation
-
 
 + Time stamping in stream option (Maybe GPS message see EPD-ship)
 
