@@ -147,6 +147,9 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
      * @param status
      */
     private void updateStatus(TransponderStatus status) {
+        if (transponder == null) {
+            return;
+        }
         // Determine client status
         clientStatusIconLabel.setIcon(status.isClientConnected() ? OK_ICON : ERROR_ICON);
         // Determine server status

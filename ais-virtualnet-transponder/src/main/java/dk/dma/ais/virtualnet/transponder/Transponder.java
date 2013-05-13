@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.jcip.annotations.ThreadSafe;
 
@@ -62,6 +63,8 @@ public class Transponder extends Thread {
     private final TransponderOwnMessage ownMessage;
     private final VdmVdoTransformer vdoTransformer;
     private final CropVdmTransformer cropTransformer;
+        
+    private final ConcurrentHashMap<Integer, Position> positions = new ConcurrentHashMap<>();
 
     private volatile Socket socket;
     private volatile PrintWriter out;
@@ -128,6 +131,9 @@ public class Transponder extends Thread {
                 status.setShipName(AisMessage.trimText(name));
             }
         }
+        
+        // Position of current target
+        Position position = null;
 
         // Handle position
         if (message instanceof IVesselPositionMessage) {
@@ -144,12 +150,26 @@ public class Transponder extends Thread {
                 if (!posMsg.isPositionValid()) {
                     return;
                 }
-                synchronized (this) {
-                    Position pos = posMsg.getPos().getGeoLocation();
-                    if (status.getOwnPos() == null || pos.rhumbLineDistanceTo(status.getOwnPos()) > conf.getReceiveRadius()) {
-                        return;
-                    }
-                }
+                // Save position
+                position = posMsg.getPos().getGeoLocation();
+                positions.put(message.getUserId(), position);
+            }
+        }
+
+        // Maybe filter away message
+        if (!own && conf.getReceiveRadius() > 0) {
+            if (status.getOwnPos() == null) {
+                return;
+            }
+            // Try to get position
+            if (position == null) {
+                position = positions.get(message.getUserId());
+            }
+            if (position == null) {
+                return;
+            }
+            if (position.rhumbLineDistanceTo(status.getOwnPos()) > conf.getReceiveRadius()) {
+                return;
             }
         }
 
