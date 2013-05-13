@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <transponderConfiguration>
-    <ownMmsi>359000003</ownMmsi>
+    <ownMmsi>219622000</ownMmsi>
     <ownPosInterval>1</ownPosInterval>
-    <password>julemand</password>
+    <password>julemand11</password>
     <port>8001</port>
     <receiveRadius>9260</receiveRadius>
-    <serverHost>localhost</serverHost>
-    <serverPort>8080</serverPort>
-    <username>ole</username>
+    <serverHost>service.e-navigation.net</serverHost>
+    <serverPort>10002</serverPort>
+    <username>dma</username>
 </transponderConfiguration>

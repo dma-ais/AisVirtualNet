@@ -99,7 +99,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         authenticator = new Authenticator(usersFile);
         
         // Create MMSI broker
-        mmsiBroker = new MmsiBroker(targetTable);
+        mmsiBroker = new MmsiBroker();
         
         // Create AisBus
         aisBus = conf.getAisbusConfiguration().getInstance();

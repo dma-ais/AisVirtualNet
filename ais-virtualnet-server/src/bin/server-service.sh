@@ -10,7 +10,15 @@ else
 	CONFFILE=$2
 fi
 
-PROCNAME="dk.dma.ais.virtualnet.server.ServerDaemon -file $CONFFILE"
+if [ -z $3 ]
+then
+	USERSFILE=users.txt
+else
+	USERSFILE=$3
+fi
+
+
+PROCNAME="dk.dma.ais.virtualnet.server.ServerDaemon -conf $CONFFILE"
 
 stop () {
 	# Find pid
@@ -32,7 +40,7 @@ start)
 		exit 1
 	fi
     echo "Starting ServerDaemon"
-    ./server.sh -file $CONFFILE > /dev/null 2>&1 &
+    ./server.sh -conf $CONFFILE -users $USERSFILE > /dev/null 2>&1 &
     ;;
 stop)
     stop

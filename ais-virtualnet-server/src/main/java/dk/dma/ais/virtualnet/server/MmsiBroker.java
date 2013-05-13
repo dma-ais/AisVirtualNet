@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage.ReserveResult;
-import dk.dma.ais.virtualnet.common.table.TargetTable;
 
 @ThreadSafe
 public class MmsiBroker {
@@ -44,13 +43,8 @@ public class MmsiBroker {
      * Map from authToken to mmsi
      */
     private final Map<String, Integer> authTokenMmsiMap = new HashMap<>();
-    /**
-     * Table of all visible targets
-     */
-    private final TargetTable targetTable;
 
-    public MmsiBroker(TargetTable targetTable) {
-        this.targetTable = targetTable;
+    public MmsiBroker() {
     }
 
     /**
@@ -65,9 +59,9 @@ public class MmsiBroker {
         Booking booking = mmsiBookingMap.get(mmsi);
         if (booking == null || !booking.isReserved()) {
             // Determine if target is visible
-            if (!targetTable.exists(mmsi)) {
-                return ReserveResult.MMSI_NOT_FOUND;
-            }
+//            if (!targetTable.exists(mmsi)) {
+//                return ReserveResult.MMSI_NOT_FOUND;
+//            }
             booking = new Booking();
             mmsiBookingMap.put(mmsi, booking);
             authTokenMmsiMap.put(authToken, mmsi);

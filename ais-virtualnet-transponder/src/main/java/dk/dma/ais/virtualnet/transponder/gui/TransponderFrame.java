@@ -248,6 +248,12 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     }
 
     private void selectTarget() {
+        try {
+            updateConf();
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Transponder error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         Cursor currentCursor = getCursor();
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
