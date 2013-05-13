@@ -215,9 +215,8 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
             } catch (InterruptedException e) {
                 return;
             }
-
+            targetTable.cleanup();
         }
-
     }
     
     /**

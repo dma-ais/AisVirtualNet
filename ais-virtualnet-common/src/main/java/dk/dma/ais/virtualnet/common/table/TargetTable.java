@@ -15,7 +15,9 @@
  */
 package dk.dma.ais.virtualnet.common.table;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -92,6 +94,22 @@ public class TargetTable {
     public boolean exists(int mmsi) {
         TargetTableEntry target = targets.get(mmsi);
         return target != null && target.isAlive();  
+    }
+
+    /**
+     * Remove old targets
+     */
+    public void cleanup() {
+        List<Integer> removeTargets = new ArrayList<>();
+        for (TargetTableEntry target : targets.values()) {
+            if (!target.isAlive()) {
+                removeTargets.add(target.getMmsi());
+            }
+        }
+        for (Integer mmsi : removeTargets) {
+            targets.remove(mmsi);
+        }
+        
     }
 
 }
