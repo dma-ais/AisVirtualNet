@@ -392,12 +392,12 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         JLabel portLbl = new JLabel("Port");
         portLbl.setBounds(16, 23, 34, 16);
         transponderPanel.add(portLbl);
-        JLabel radiusLbl = new JLabel("Receive radius (nm)");
-        radiusLbl.setBounds(119, 23, 127, 16);
+        JLabel radiusLbl = new JLabel("Receive radius (nm) (0 = all)");
+        radiusLbl.setBounds(119, 23, 193, 16);
         transponderPanel.add(radiusLbl);
         port.setBounds(49, 20, 58, 22);
         transponderPanel.add(port);
-        receiveRadius.setBounds(247, 20, 58, 22);
+        receiveRadius.setBounds(324, 20, 58, 22);
         transponderPanel.add(receiveRadius);
         getContentPane().add(transponderPanel);
 
