@@ -1,14 +1,6 @@
 TODO
 ====
 
-
-Step 2:
--------------------------
-
-+ Install on server
-
-+ Ais dump file
-
 Later 
 -------------------------
 
