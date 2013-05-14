@@ -72,7 +72,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     // Control buttons
     private final JButton startButton = new JButton("Start");
     private final JButton stopButton = new JButton("Stop");
-    private final JButton exitButton = new JButton("Exit");
+    private final JButton closeExitButton = new JButton("Exit/Close");
     private final JButton selectVesselButton = new JButton("...");
 
     // Input fields
@@ -106,9 +106,13 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public TransponderFrame() {
         this("transponder.xml");
     }
-
+        
     public TransponderFrame(String conffile) {
         this(conffile, false);
+    }
+    
+    public TransponderFrame(boolean embeeded) {
+        this("transponder.xml", embeeded);
     }
 
     public TransponderFrame(String conffile, boolean embedded) {
@@ -126,8 +130,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         startButton.addActionListener(this);
         stopButton.addActionListener(this);
         selectVesselButton.addActionListener(this);
-        exitButton.addActionListener(this);
-        exitButton.setVisible(!embedded);
+        closeExitButton.addActionListener(this);
+        closeExitButton.setText(embedded ? "Close" : "Exit");
 
         layoutGui();
 
@@ -244,7 +248,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             stopTransponder();
         } else if (e.getSource() == selectVesselButton) {
             selectTarget();
-        } else if (e.getSource() == exitButton) {
+        } else if (e.getSource() == closeExitButton) {
             shutdown();
         }
 
@@ -441,8 +445,8 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         stopButton.setBounds(87, 25, 75, 29);
         controlPanel.add(stopButton);
         getContentPane().add(controlPanel);
-        exitButton.setBounds(319, 25, 75, 29);
-        controlPanel.add(exitButton);
+        closeExitButton.setBounds(319, 25, 75, 29);
+        controlPanel.add(closeExitButton);
     }
 
     public void shutdown() {

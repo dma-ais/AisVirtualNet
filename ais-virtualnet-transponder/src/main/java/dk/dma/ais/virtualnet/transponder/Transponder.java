@@ -79,7 +79,7 @@ public class Transponder extends Thread {
         serverConnection = new ServerConnection(this, conf);
         serverSocket = new ServerSocket(conf.getPort());
         ownMessage = new TransponderOwnMessage(this, conf.getOwnPosInterval());
-        vdoTransformer = new VdmVdoTransformer(conf.getOwnMmsi());
+        vdoTransformer = new VdmVdoTransformer(conf.getOwnMmsi(), "AI");
         cropTransformer = new CropVdmTransformer();
     }
 
