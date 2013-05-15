@@ -108,24 +108,25 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     }
         
     public TransponderFrame(String conffile) {
-        this(conffile, false);
+        this(conffile, false, null);
     }
     
     public TransponderFrame(boolean embeeded) {
-        this("transponder.xml", embeeded);
+        this("transponder.xml", embeeded, null);
     }
 
-    public TransponderFrame(String conffile, boolean embedded) {
+    public TransponderFrame(String conffile, boolean embedded, JFrame parent) {
         super();
         this.conffile = conffile;
         this.embedded = embedded;
-        setSize(new Dimension(412, 500));
+        setSize(new Dimension(420, 500));
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(this);
+        setResizable(false);
 
         setTitle("AisVirtualNet transponder");
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(parent);
 
         startButton.addActionListener(this);
         stopButton.addActionListener(this);
