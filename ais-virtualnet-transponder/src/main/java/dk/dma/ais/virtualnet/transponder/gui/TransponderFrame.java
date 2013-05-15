@@ -249,7 +249,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         } else if (e.getSource() == selectVesselButton) {
             selectTarget();
         } else if (e.getSource() == closeExitButton) {
-            shutdown();
+            close();
         }
 
     }
@@ -449,22 +449,26 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
         controlPanel.add(closeExitButton);
     }
 
-    public void shutdown() {
+    public void close() {
         saveConf();
         if (embedded) {
             this.setVisible(false);
         } else {
-            if (transponder != null) {
-                stopTransponder();
-            }
-            this.dispose();
+            shutdown();
             System.exit(0);
         }
+    }
+    
+    public void shutdown() {
+        if (transponder != null) {
+            stopTransponder();
+        }
+        this.dispose();
     }
 
     @Override
     public void windowClosing(WindowEvent e) {
-        shutdown();
+        close();
     }
 
     @Override
