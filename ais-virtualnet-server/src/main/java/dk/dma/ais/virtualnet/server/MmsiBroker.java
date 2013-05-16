@@ -56,12 +56,17 @@ public class MmsiBroker {
      */
     public synchronized ReserveResult reserve(int mmsi, String authToken) {
         LOG.info("Reserve mmsi: " + mmsi + " authToken: " + authToken);
+        // No reservation needed for 0 and 9xxxx MMSI
+        if (nonReservableMmsi(mmsi)) {
+            authTokenMmsiMap.put(authToken, mmsi);
+            return ReserveResult.MMSI_RESERVED;
+        }
         Booking booking = mmsiBookingMap.get(mmsi);
         if (booking == null || !booking.isReserved()) {
             // Determine if target is visible
-//            if (!targetTable.exists(mmsi)) {
-//                return ReserveResult.MMSI_NOT_FOUND;
-//            }
+            // if (!targetTable.exists(mmsi)) {
+            // return ReserveResult.MMSI_NOT_FOUND;
+            // }
             booking = new Booking();
             mmsiBookingMap.put(mmsi, booking);
             authTokenMmsiMap.put(authToken, mmsi);
@@ -82,6 +87,9 @@ public class MmsiBroker {
             LOG.error("No MMSI for authToken: " + authToken);
             return false;
         }
+        if (nonReservableMmsi(mmsi)) {
+            return true;
+        }
         Booking booking = mmsiBookingMap.get(mmsi);
         if (booking == null) {
             LOG.error("No booking for MMSI: " + mmsi);
@@ -98,8 +106,12 @@ public class MmsiBroker {
     public synchronized void release(String authToken) {
         LOG.info("Release mmsi authToken: " + authToken);
         Integer mmsi = authTokenMmsiMap.get(authToken);
+        authTokenMmsiMap.remove(authToken);
         if (mmsi == null) {
             LOG.error("No MMSI for authToken: " + authToken);
+            return;
+        }
+        if (nonReservableMmsi(mmsi)) {
             return;
         }
         Booking booking = mmsiBookingMap.get(mmsi);
@@ -108,6 +120,10 @@ public class MmsiBroker {
             return;
         }
         mmsiBookingMap.remove(mmsi);
+    }
+
+    public static boolean nonReservableMmsi(int mmsi) {
+        return mmsi == 0 || mmsi >= 900000000;
     }
 
     private class Booking {

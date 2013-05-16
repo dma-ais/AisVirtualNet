@@ -117,7 +117,6 @@ public abstract class WebSocketSession implements WebSocketListener {
             try {
                 r.sendString(text);
             } catch (IOException e) {
-                e.printStackTrace();
                 // ignore
             }
         } else {

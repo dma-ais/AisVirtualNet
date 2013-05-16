@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <serverConfiguration>
-	<port>8080</port>
+	<port>10001</port>
 	<aisbus>
 		<provider xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="repeatingFileReaderProviderConfiguration">
 			<filename>src/main/resources/ais.txt.gz</filename>
