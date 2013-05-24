@@ -95,7 +95,7 @@ public class Transponder extends Thread {
         try {
             message = packet.getAisMessage();
         } catch (AisMessageException | SixbitException e) {
-            LOG.info("Failed to parse message: " + e.getMessage());
+            LOG.debug("Failed to parse message: " + e.getMessage());
             return;
         }
 
