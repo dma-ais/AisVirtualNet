@@ -90,7 +90,7 @@ public abstract class WebSocketSession implements WebSocketListener {
         handleMessage(msg);        
     }
     
-    public synchronized final void close() {
+    public final synchronized void close() {
         try {
             if (session != null) {
                 session.close();
