@@ -15,6 +15,8 @@
  */
 package dk.dma.ais.virtualnet.server;
 
+import net.jcip.annotations.ThreadSafe;
+
 import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,7 @@ import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.virtualnet.common.message.WsMessage;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
-// TODO threadsafe?
+@ThreadSafe
 public class WebSocketServerSession extends WebSocketSession {
     
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
@@ -38,8 +40,8 @@ public class WebSocketServerSession extends WebSocketSession {
     
     @Override
     public void onWebSocketConnect(Session session) {
-        server.addClient(this);
         super.onWebSocketConnect(session);
+        server.addClient(this);        
     }
     
     @Override

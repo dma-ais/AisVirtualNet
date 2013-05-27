@@ -18,8 +18,12 @@ package dk.dma.ais.virtualnet.common.websocket;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
+import net.jcip.annotations.GuardedBy;
+import net.jcip.annotations.ThreadSafe;
+
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +33,7 @@ import com.google.gson.Gson;
 import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.virtualnet.common.message.WsMessage;
 
+@ThreadSafe
 public abstract class WebSocketSession implements WebSocketListener {
     
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketSession.class);
@@ -37,6 +42,7 @@ public abstract class WebSocketSession implements WebSocketListener {
 
     private final CountDownLatch connected = new CountDownLatch(1);
 
+    @GuardedBy("this")
     private Session session;
 
     public WebSocketSession() {
@@ -49,24 +55,23 @@ public abstract class WebSocketSession implements WebSocketListener {
     protected abstract void handleMessage(WsMessage wsMessage);
     
     @Override
-    public void onWebSocketConnect(Session session) {
+    public synchronized void onWebSocketConnect(Session session) {
         LOG.info("Client connected: " + session.getRemoteAddress());
         this.session = session;
         getConnected().countDown();
     }
     
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public synchronized void onWebSocketClose(int statusCode, String reason) {
         LOG.info("Client connection closed: " + session.getRemoteAddress());
         session = null;
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
         LOG.error("Received binary data");
-        Session s = session;
         try {
-            s.close(1, "Expected text only");
+            session.close(1, "Expected text only");
         } catch (IOException e) {
             LOG.error("Failed to close web sokcet", e);
         }
@@ -78,18 +83,17 @@ public abstract class WebSocketSession implements WebSocketListener {
     }
 
     @Override
-    public void onWebSocketText(String message) {
+    public synchronized void onWebSocketText(String message) {
         // Try to deserialize into message
         WsMessage msg = gson.fromJson(message, WsMessage.class);
         // TODO handle exception
         handleMessage(msg);        
     }
     
-    public final void close() {
-        Session s = session;
+    public synchronized final void close() {
         try {
-            if (s != null) {
-                s.close();
+            if (session != null) {
+                session.close();
             }
         } catch (IOException e) {
             LOG.error("Failed to close web socket: " + e.getMessage());
@@ -100,19 +104,21 @@ public abstract class WebSocketSession implements WebSocketListener {
         sendMessage(new WsMessage(packet));
     }
     
-    public void sendPacket(String packet) {
-        WsMessage wsMessage = new WsMessage();
-        wsMessage.setPacket(packet);
-        sendMessage(wsMessage);
-    }
-    
     protected final void sendMessage(WsMessage wsMessage) {
         sendText(gson.toJson(wsMessage));
     }
     
-    private void sendText(String text) {
-        Session s = session;
-        RemoteEndpoint r = s == null ? null : s.getRemote();
+    private synchronized void sendText(String text) {
+        RemoteEndpoint r = null;
+        if (session != null && session.isOpen()) {
+            // Guard against session closed before getRemote call
+            try {
+                r = session.getRemote();
+            } catch (WebSocketException e) {
+                LOG.error("Could not get remote for session", e);
+            }
+        }
+
         if (r != null) {
             try {
                 r.sendString(text);
