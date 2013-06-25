@@ -63,7 +63,7 @@ public class Transponder extends Thread {
     private final TransponderOwnMessage ownMessage;
     private final VdmVdoTransformer vdoTransformer;
     private final CropVdmTransformer cropTransformer;
-        
+
     private final ConcurrentHashMap<Integer, Position> positions = new ConcurrentHashMap<>();
 
     private volatile Socket socket;
@@ -90,7 +90,7 @@ public class Transponder extends Thread {
      */
     public void receive(String strPacket) {
         // Make packet and get ais message
-        AisPacket packet = AisPacket.from(strPacket);
+        AisPacket packet = new AisPacket(strPacket);
         AisMessage message;
         try {
             message = packet.getAisMessage();
@@ -131,7 +131,7 @@ public class Transponder extends Thread {
                 status.setShipName(AisMessage.trimText(name));
             }
         }
-        
+
         // Position of current target
         Position position = null;
 
@@ -203,20 +203,18 @@ public class Transponder extends Thread {
         try {
             ownMessage.join(10000);
         } catch (InterruptedException e) {
-            e.printStackTrace();            
+            e.printStackTrace();
         }
         this.interrupt();
         serverConnection.shutdown();
         if (socket != null) {
             try {
                 socket.close();
-            } catch (IOException e) {
-            }
+            } catch (IOException e) {}
         }
         try {
             serverSocket.close();
-        } catch (IOException e) {
-        }
+        } catch (IOException e) {}
         try {
             this.join(10000);
         } catch (InterruptedException e) {
@@ -245,13 +243,11 @@ public class Transponder extends Thread {
                 out = new PrintWriter(socket.getOutputStream());
                 status.setClientConnected(true);
                 readFromAI();
-            } catch (IOException e) {
-            }
+            } catch (IOException e) {}
 
             try {
                 socket.close();
-            } catch (IOException e1) {
-            }
+            } catch (IOException e1) {}
 
             LOG.info("Lost connection to client");
         }
@@ -321,7 +317,7 @@ public class Transponder extends Thread {
             LOG.error("Failed to encode message: " + message, e);
             return;
         }
-        AisPacket packet = AisPacket.from(StringUtils.join(sentences, "\r\n"));
+        AisPacket packet = new AisPacket(StringUtils.join(sentences, "\r\n"));
         LOG.info("Sending VDM to network: " + packet.getStringMessage());
         serverConnection.send(packet);
     }
@@ -373,7 +369,8 @@ public class Transponder extends Thread {
         send(encoded);
     }
 
-    public static TargetTableMessage getTargets(String host, int port, String username, String password) throws RestException {
+    public static TargetTableMessage getTargets(String host, int port, String username, String password)
+            throws RestException {
         RestClient restClient = new RestClient(host, port);
         return restClient.getTargetTable(username, password);
     }

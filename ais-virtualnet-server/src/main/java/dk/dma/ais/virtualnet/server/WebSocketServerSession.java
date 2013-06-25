@@ -27,23 +27,23 @@ import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 @ThreadSafe
 public class WebSocketServerSession extends WebSocketSession {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
-    
+
     private final AisVirtualNetServer server;
     private volatile boolean authenticated;
     private volatile String authToken;
-    
+
     public WebSocketServerSession(AisVirtualNetServer server) {
         this.server = server;
     }
-    
+
     @Override
     public void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
-        server.addClient(this);        
+        server.addClient(this);
     }
-    
+
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         server.removeClient(this);
@@ -52,15 +52,15 @@ public class WebSocketServerSession extends WebSocketSession {
         }
         super.onWebSocketClose(statusCode, reason);
     }
-    
+
     @Override
     public void sendPacket(AisPacket packet) {
-        if (!authenticated) {            
+        if (!authenticated) {
             return;
         }
         super.sendPacket(packet);
     }
-    
+
     @Override
     protected void handleMessage(WsMessage wsMessage) {
         // Maybe message a token
@@ -87,7 +87,7 @@ public class WebSocketServerSession extends WebSocketSession {
             return;
         }
         LOG.info("Received message from client:\n" + strPacket);
-        server.distribute(AisPacket.from(strPacket));
+        server.distribute(new AisPacket(strPacket));
     }
 
 }
