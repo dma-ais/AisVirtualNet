@@ -12,37 +12,12 @@
 		</layout>
 	</appender>
 	
-	<!-- LOGFILE  -->
-	<appender name="LOGFILE" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="log/transponder.log" />
-		<param name="Append" value="true" />
-		<param name="MaxFileSize" value="1024KB" />
-		<param name="MaxBackupIndex" value="3" />
-		<param name="Threshold" value="INFO" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d %-5p [%c{1}] %m%n" />
-		</layout>
-	</appender>
-	
-	<!-- ERROR LOG  -->
-	<appender name="ERRORFILE" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="log/transponder-error.log" />
-		<param name="Append" value="true" />
-		<param name="MaxFileSize" value="1024KB" />
-		<param name="Threshold" value="ERROR" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d %-5p [%c{1}] %m%n" />
-		</layout>
-	</appender>
-	
 	<logger name="dk.dma.ais.reader">
 		<level value="ERROR" />
 	</logger>
 
 	<root>
 		<appender-ref ref="CONSOLE" />
-		<appender-ref ref="LOGFILE" />
-		<appender-ref ref="ERRORFILE" />
 	</root>
 
 </log4j:configuration>
