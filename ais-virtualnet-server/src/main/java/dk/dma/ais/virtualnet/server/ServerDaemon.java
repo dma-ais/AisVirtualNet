@@ -66,7 +66,7 @@ public class ServerDaemon extends AbstractDaemon {
     }
     
     @Override
-    protected void shutdown() {
+    public void shutdown() {
         LOG.info("Shutting down");
         if (server != null) {
             server.shutdown();

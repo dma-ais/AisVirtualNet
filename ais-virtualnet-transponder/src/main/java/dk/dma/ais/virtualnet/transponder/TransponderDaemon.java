@@ -66,7 +66,7 @@ public class TransponderDaemon extends AbstractDaemon {
     }
 
     @Override
-    protected void shutdown() {
+    public void shutdown() {
         LOG.info("Shutting down");
         if (transponder != null) {
             transponder.shutdown();
