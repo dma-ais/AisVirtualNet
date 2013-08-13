@@ -90,7 +90,7 @@ public class Transponder extends Thread {
      */
     public void receive(String strPacket) {
         // Make packet and get ais message
-        AisPacket packet = new AisPacket(strPacket);
+        AisPacket packet = AisPacket.from(strPacket);
         AisMessage message;
         try {
             message = packet.getAisMessage();
@@ -317,7 +317,7 @@ public class Transponder extends Thread {
             LOG.error("Failed to encode message: " + message, e);
             return;
         }
-        AisPacket packet = new AisPacket(StringUtils.join(sentences, "\r\n"));
+        AisPacket packet = AisPacket.from(StringUtils.join(sentences, "\r\n"));
         LOG.info("Sending VDM to network: " + packet.getStringMessage());
         serverConnection.send(packet);
     }

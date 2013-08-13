@@ -87,7 +87,7 @@ public class WebSocketServerSession extends WebSocketSession {
             return;
         }
         LOG.info("Received message from client:\n" + strPacket);
-        server.distribute(new AisPacket(strPacket));
+        server.distribute(AisPacket.from(strPacket));
     }
 
 }
