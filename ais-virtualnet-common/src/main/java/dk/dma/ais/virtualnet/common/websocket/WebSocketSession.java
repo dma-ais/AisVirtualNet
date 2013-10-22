@@ -78,8 +78,8 @@ public abstract class WebSocketSession implements WebSocketListener {
     }
 
     @Override
-    public void onWebSocketError(Throwable t) {
-        
+    public synchronized void onWebSocketError(Throwable t) {
+        LOG.error("Websocket error: " + t.getMessage());
     }
 
     @Override
@@ -91,6 +91,7 @@ public abstract class WebSocketSession implements WebSocketListener {
     }
     
     public final synchronized void close() {
+        LOG.info("Closing web socket");
         try {
             if (session != null) {
                 session.close();
@@ -100,11 +101,11 @@ public abstract class WebSocketSession implements WebSocketListener {
         }
     }
     
-    public void sendPacket(AisPacket packet) {
+    public synchronized void sendPacket(AisPacket packet) {
         sendMessage(new WsMessage(packet));
     }
     
-    protected final void sendMessage(WsMessage wsMessage) {
+    protected final synchronized void sendMessage(WsMessage wsMessage) {
         sendText(gson.toJson(wsMessage));
     }
     

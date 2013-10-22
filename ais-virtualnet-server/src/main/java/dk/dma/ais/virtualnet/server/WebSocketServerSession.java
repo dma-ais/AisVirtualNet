@@ -31,21 +31,21 @@ public class WebSocketServerSession extends WebSocketSession {
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
 
     private final AisVirtualNetServer server;
-    private volatile boolean authenticated;
-    private volatile String authToken;
+    private boolean authenticated;
+    private String authToken;
 
     public WebSocketServerSession(AisVirtualNetServer server) {
         this.server = server;
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public synchronized void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
         server.addClient(this);
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public synchronized void onWebSocketClose(int statusCode, String reason) {
         server.removeClient(this);
         if (authToken != null) {
             server.getMmsiBroker().release(authToken);
@@ -54,7 +54,7 @@ public class WebSocketServerSession extends WebSocketSession {
     }
 
     @Override
-    public void sendPacket(AisPacket packet) {
+    public synchronized void sendPacket(AisPacket packet) {
         if (!authenticated) {
             return;
         }
@@ -62,7 +62,7 @@ public class WebSocketServerSession extends WebSocketSession {
     }
 
     @Override
-    protected void handleMessage(WsMessage wsMessage) {
+    protected synchronized void handleMessage(WsMessage wsMessage) {
         // Maybe message a token
         if (wsMessage.getAuthToken() != null) {
             authToken = wsMessage.getAuthToken();

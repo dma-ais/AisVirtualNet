@@ -145,6 +145,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
      * @param session
      */
     public void addClient(WebSocketServerSession session) {
+        LOG.info("Adding client");
         clients.add(session);
     }
     
@@ -153,7 +154,9 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
      * @param session
      */
     public void removeClient(WebSocketServerSession session) {
+        LOG.info("Removing client");
         clients.remove(session);
+        LOG.info("Client count: " + clients.size());
     }
 
 
@@ -183,6 +186,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     }
 
     public void shutdown() {
+        LOG.info("Stopping web server");
         try {
             server.stop();
         } catch (Exception e) {
@@ -190,13 +194,16 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         }
         
         if (aisBus != null) {
+            LOG.info("Cancelling AisBus");
             aisBus.cancel();
         }
         
+        LOG.info("Closing open web sockets");
         for (WebSocketServerSession client : clients) {
             client.close();
         }
         
+        LOG.info("Waiting for server to stop");
         this.interrupt();
         try {
             this.join(10000);
