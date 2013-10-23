@@ -128,7 +128,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         targetTable.update(packet);
         // Distribute packet to clients
         for (WebSocketServerSession client : clients) {
-            client.sendPacket(packet);
+            client.enqueuePacket(packet);
         }
     }
     

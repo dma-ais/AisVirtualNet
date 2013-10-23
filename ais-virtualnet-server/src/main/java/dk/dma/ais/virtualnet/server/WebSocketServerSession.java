@@ -21,18 +21,28 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dk.dma.ais.bus.OverflowLogger;
 import dk.dma.ais.packet.AisPacket;
+import dk.dma.ais.queue.BlockingMessageQueue;
+import dk.dma.ais.queue.IQueueEntryHandler;
+import dk.dma.ais.queue.MessageQueueOverflowException;
+import dk.dma.ais.queue.MessageQueueReader;
 import dk.dma.ais.virtualnet.common.message.WsMessage;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 @ThreadSafe
-public class WebSocketServerSession extends WebSocketSession {
+public class WebSocketServerSession extends WebSocketSession implements IQueueEntryHandler<AisPacket> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
+    private final OverflowLogger overflowLogger = new OverflowLogger(LOG);
+    
+    private static final long OVERFLOW_TIMEOUT = 30 * 1000; // 30 sec
 
     private final AisVirtualNetServer server;
     private boolean authenticated;
     private String authToken;
+    private MessageQueueReader<AisPacket> queueReader;
+    private long overflowStart;
 
     public WebSocketServerSession(AisVirtualNetServer server) {
         this.server = server;
@@ -40,17 +50,47 @@ public class WebSocketServerSession extends WebSocketSession {
 
     @Override
     public synchronized void onWebSocketConnect(Session session) {
+        // Setup message queue and message queue reader
+        queueReader = new MessageQueueReader<AisPacket>(this, new BlockingMessageQueue<AisPacket>(), 10);
+        queueReader.start();
         super.onWebSocketConnect(session);
         server.addClient(this);
     }
 
     @Override
     public synchronized void onWebSocketClose(int statusCode, String reason) {
-        server.removeClient(this);
+        if (queueReader != null) {
+            queueReader.cancel();
+        }
+        server.removeClient(this);        
         if (authToken != null) {
             server.getMmsiBroker().release(authToken);
         }
         super.onWebSocketClose(statusCode, reason);
+    }
+
+    public synchronized void enqueuePacket(AisPacket packet) {
+        if (queueReader != null) {
+            try {
+                queueReader.getQueue().push(packet);
+            } catch (MessageQueueOverflowException e) {
+                overflowLogger.log("Write queue is full");
+                if (overflowStart == 0) {
+                    overflowStart = System.currentTimeMillis();
+                }
+                if (System.currentTimeMillis() - overflowStart > OVERFLOW_TIMEOUT) {
+                    close();
+                }
+                return;
+            }
+            overflowStart = 0;
+        }
+
+    }
+
+    @Override
+    public synchronized void receive(AisPacket packet) {
+        sendPacket(packet);
     }
 
     @Override
