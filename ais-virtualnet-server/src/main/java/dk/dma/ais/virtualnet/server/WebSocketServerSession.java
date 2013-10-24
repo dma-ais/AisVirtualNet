@@ -35,13 +35,13 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
     private final OverflowLogger overflowLogger = new OverflowLogger(LOG);
-    
+
     private static final long OVERFLOW_TIMEOUT = 30 * 1000; // 30 sec
 
     private final AisVirtualNetServer server;
-    private boolean authenticated;
-    private String authToken;
-    private MessageQueueReader<AisPacket> queueReader;
+    private volatile boolean authenticated;
+    private volatile String authToken;
+    private volatile MessageQueueReader<AisPacket> queueReader;
     private long overflowStart;
 
     public WebSocketServerSession(AisVirtualNetServer server) {
@@ -49,7 +49,7 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
     }
 
     @Override
-    public synchronized void onWebSocketConnect(Session session) {
+    public void onWebSocketConnect(Session session) {
         // Setup message queue and message queue reader
         queueReader = new MessageQueueReader<AisPacket>(this, new BlockingMessageQueue<AisPacket>(), 10);
         queueReader.start();
@@ -58,18 +58,21 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
     }
 
     @Override
-    public synchronized void onWebSocketClose(int statusCode, String reason) {
-        if (queueReader != null) {
-            queueReader.cancel();
+    public void onWebSocketClose(int statusCode, String reason) {
+        MessageQueueReader<AisPacket> qr = queueReader;
+        String at = authToken;
+        if (qr != null) {
+            qr.cancel();
         }
-        server.removeClient(this);        
-        if (authToken != null) {
-            server.getMmsiBroker().release(authToken);
+        queueReader = null;
+        server.removeClient(this);
+        if (at != null) {
+            server.getMmsiBroker().release(at);
         }
         super.onWebSocketClose(statusCode, reason);
     }
 
-    public synchronized void enqueuePacket(AisPacket packet) {
+    public void enqueuePacket(AisPacket packet) {
         if (queueReader != null) {
             try {
                 queueReader.getQueue().push(packet);
@@ -85,16 +88,15 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
             }
             overflowStart = 0;
         }
-
     }
 
     @Override
-    public synchronized void receive(AisPacket packet) {
+    public void receive(AisPacket packet) {
         sendPacket(packet);
     }
 
     @Override
-    public synchronized void sendPacket(AisPacket packet) {
+    public void sendPacket(AisPacket packet) {
         if (!authenticated) {
             return;
         }
@@ -102,15 +104,15 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
     }
 
     @Override
-    protected synchronized void handleMessage(WsMessage wsMessage) {
+    protected void handleMessage(WsMessage wsMessage) {
         // Maybe message a token
         if (wsMessage.getAuthToken() != null) {
             authToken = wsMessage.getAuthToken();
-            authenticated = server.checkToken(authToken);
+            authenticated = server.checkToken(wsMessage.getAuthToken());
             LOG.info("Authentication result: " + authenticated);
             // Maybe activate MMSI reservation
             if (authenticated) {
-                if (!server.getMmsiBroker().activate(authToken)) {
+                if (!server.getMmsiBroker().activate(wsMessage.getAuthToken())) {
                     LOG.error("Failed to activate MMSI reservation");
                     close();
                     return;

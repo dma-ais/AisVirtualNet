@@ -124,11 +124,14 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
      */
     @Override
     public void accept(AisPacket packet) {
+        LOG.debug("Accepted message from DistributerConsumer");
         // Maintain target table
         targetTable.update(packet);
         // Distribute packet to clients
         for (WebSocketServerSession client : clients) {
+            LOG.debug("\tEnqueing at client");
             client.enqueuePacket(packet);
+            LOG.debug("\t\tDone enqueing at client");
         }
     }
     
