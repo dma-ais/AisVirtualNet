@@ -36,7 +36,7 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
     private final OverflowLogger overflowLogger = new OverflowLogger(LOG);
 
-    private static final long OVERFLOW_TIMEOUT = 30 * 1000; // 30 sec
+    private static final long OVERFLOW_TIMEOUT = 10 * 1000; // 10 sec
 
     private final AisVirtualNetServer server;
     private volatile boolean authenticated;

@@ -117,8 +117,6 @@ public abstract class WebSocketSession implements WebSocketListener {
             } catch (IOException e) {
                 LOG.error("Failed to send text");
             }
-        } else {
-            LOG.error("Could not send text - no remote endpoint");
         }
     }
 
