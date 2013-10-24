@@ -22,6 +22,7 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +111,12 @@ public abstract class WebSocketSession implements WebSocketListener {
 
     private void sendText(String text) {
         Session s = session;
-        RemoteEndpoint r = s == null ? null : s.getRemote();
+        RemoteEndpoint r = null;
+        try {
+            r = s == null ? null : s.getRemote();            
+        } catch (WebSocketException e) {
+            // Ignore
+        }
         if (r != null) {
             try {
                 r.sendString(text);
