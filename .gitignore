@@ -6,4 +6,5 @@ target/
 server-test.xml
 log/
 transponder.xml
+dependency-reduced-pom.xml
 
