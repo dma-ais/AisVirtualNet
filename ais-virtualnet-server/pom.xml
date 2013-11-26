@@ -62,6 +62,9 @@
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>dk.dma.ais.virtualnet.server.ServerDaemon</mainClass>
 								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
+								</transformer>
 							</transformers>
 							<filters>
 								<filter>
