@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import dk.dma.ais.virtualnet.common.message.AuthenticationReplyMessage;
 import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage;
+import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage.ReserveResult;
 import dk.dma.ais.virtualnet.common.message.StatusMessage;
 import dk.dma.ais.virtualnet.common.message.TargetTableMessage;
-import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage.ReserveResult;
 import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
 
 /**
@@ -37,12 +37,12 @@ import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
  */
 @Path("/")
 public class RestService {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(RestService.class);
-    
+
     @Context
-    private AisVirtualNetServer server;
-    
+    private AisVirtualNetServer server = AisVirtualNetServerProvider.server;
+
     @GET
     @Path("status")
     @Produces(MediaType.APPLICATION_JSON)
@@ -54,7 +54,8 @@ public class RestService {
     @GET
     @Path("target_table")
     @Produces(MediaType.APPLICATION_JSON)
-    public TargetTableMessage getTargetTable(@QueryParam("username") String username, @QueryParam("password") String password) {
+    public TargetTableMessage getTargetTable(@QueryParam("username") String username,
+            @QueryParam("password") String password) {
         LOG.info("Getting target table for user: " + username + " password: " + password);
         if (server.getAuthenticator().authenticate(username, password) == null) {
             LOG.error("\tFailed to authenticate user");
@@ -62,11 +63,12 @@ public class RestService {
         }
         return server.getTargetTable().getAliveTargetTableMessage();
     }
-    
+
     @GET
     @Path("authenticate")
     @Produces(MediaType.APPLICATION_JSON)
-    public AuthenticationReplyMessage authenticate(@QueryParam("username") String username, @QueryParam("password") String password) {
+    public AuthenticationReplyMessage authenticate(@QueryParam("username") String username,
+            @QueryParam("password") String password) {
         LOG.info("Authenticating user: " + username);
         AuthenticationReplyMessage reply = new AuthenticationReplyMessage();
         String authToken = server.getAuthenticator().authenticate(username, password);
@@ -92,11 +94,12 @@ public class RestService {
         }
         return reply;
     }
-    
+
     @GET
     @Path("reserve_mmsi")
     @Produces(MediaType.APPLICATION_JSON)
-    public ReserveMmsiReplyMessage reserverMmsi(@QueryParam("mmsi") Integer mmsi, @QueryParam("authToken") String authToken) {
+    public ReserveMmsiReplyMessage reserverMmsi(@QueryParam("mmsi") Integer mmsi,
+            @QueryParam("authToken") String authToken) {
         LOG.info("Reserving mmsi: " + mmsi + " authToken: " + authToken);
         ReserveResult result;
         if (!server.getAuthenticator().validate(authToken)) {

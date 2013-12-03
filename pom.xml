@@ -4,7 +4,7 @@
   <parent>
     <groupId>dk.dma</groupId>
     <artifactId>dma-root-pom</artifactId>
-    <version>11</version>
+    <version>12</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -27,10 +27,6 @@
     <module>ais-virtualnet-transponder</module>
   </modules>
 
-  <properties>
-        <jersey.version>1.17</jersey.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>dk.dma.ais.lib</groupId>
@@ -38,29 +34,9 @@
       <version>2.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>dk.dma.commons</groupId>
-      <artifactId>dma-commons-app</artifactId>
-      <version>0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${dependencies.slf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>websocket-server</artifactId>
-      <version>${dependencies.jetty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${dependencies.jetty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>websocket-client</artifactId>
-      <version>${dependencies.jetty.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
@@ -68,9 +44,9 @@
       <version>2.2.2</version>
     </dependency>
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-json</artifactId>
-      <version>${jersey.version}</version>
+      <groupId>dk.dma.commons</groupId>
+      <artifactId>dma-commons-app</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 

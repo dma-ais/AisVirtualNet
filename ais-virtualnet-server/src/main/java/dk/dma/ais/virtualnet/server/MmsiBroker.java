@@ -39,13 +39,11 @@ public class MmsiBroker {
      * Map from mmsi to booking
      */
     private final Map<Integer, Booking> mmsiBookingMap = new HashMap<>();
+
     /**
      * Map from authToken to mmsi
      */
     private final Map<String, Integer> authTokenMmsiMap = new HashMap<>();
-
-    public MmsiBroker() {
-    }
 
     /**
      * Reserve a mmsi
@@ -128,6 +126,7 @@ public class MmsiBroker {
 
     private class Booking {
         private final long created;
+
         private long activated;
 
         public Booking() {

@@ -15,10 +15,7 @@
  */
 package dk.dma.ais.virtualnet.server.rest;
 
-import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
-
-import com.sun.jersey.spi.inject.SingletonTypeInjectableProvider;
 
 import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
 
@@ -26,14 +23,14 @@ import dk.dma.ais.virtualnet.server.AisVirtualNetServer;
  * Provider for the server
  */
 @Provider
-public class AisVirtualNetServerProvider extends SingletonTypeInjectableProvider<Context, AisVirtualNetServer> {
-    
-    private static AisVirtualNetServer server;
-    
-    public AisVirtualNetServerProvider() {
-        super(AisVirtualNetServer.class, server);
-    }
-    
+public class AisVirtualNetServerProvider /* extends SingletonTypeInjectableProvider<Context, AisVirtualNetServer> */{
+
+    static AisVirtualNetServer server;
+
+    // public AisVirtualNetServerProvider() {
+    // super(AisVirtualNetServer.class, server);
+    // }
+
     public static void setServer(AisVirtualNetServer server) {
         AisVirtualNetServerProvider.server = server;
     }

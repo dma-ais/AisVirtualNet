@@ -27,6 +27,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.beust.jcommander.Parameter;
+
 import dk.dma.ais.configuration.bus.AisBusConfiguration;
 
 /**
@@ -36,7 +38,11 @@ import dk.dma.ais.configuration.bus.AisBusConfiguration;
 public class ServerConfiguration {
 
     private AisBusConfiguration aisbusConfiguration;
+
     private int port = 8080;
+
+    @Parameter(names = "-conf", description = "AisVirtualNetServer server configuration file")
+    String confFile = "server.xml";
 
     public ServerConfiguration() {
 
@@ -50,15 +56,15 @@ public class ServerConfiguration {
     public void setAisbusConfiguration(AisBusConfiguration aisbusConfiguration) {
         this.aisbusConfiguration = aisbusConfiguration;
     }
-    
+
     public int getPort() {
         return port;
     }
-    
+
     public void setPort(int port) {
         this.port = port;
     }
-    
+
     public static void save(String filename, ServerConfiguration conf) throws JAXBException, FileNotFoundException {
         JAXBContext context = JAXBContext.newInstance(ServerConfiguration.class);
         Marshaller m = context.createMarshaller();

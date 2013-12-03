@@ -15,16 +15,14 @@
  */
 package dk.dma.ais.virtualnet.transponder;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 import dk.dma.ais.virtualnet.common.message.AuthenticationReplyMessage;
 import dk.dma.ais.virtualnet.common.message.ReserveMmsiReplyMessage;
@@ -38,20 +36,19 @@ public class RestClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestClient.class);
 
-    private final WebResource service;
+    private final WebTarget service;
 
     public RestClient(String hostname, int port) {
-        ClientConfig config = new DefaultClientConfig();
-        Client client = Client.create(config);
-        service = client.resource(UriBuilder.fromUri(String.format("http://%s:%d/rest", hostname, port)).build());
+        Client client = ClientBuilder.newClient();
+        service = client.target(UriBuilder.fromUri(String.format("http://%s:%d/rest", hostname, port)).build());
     }
 
     public AuthenticationReplyMessage authenticate(String username, String password) throws RestException {
         String hashed = Password.hashPassword(password);
         LOG.info("Authenticate username: " + username + " password: " + hashed);
         try {
-            return (AuthenticationReplyMessage) service.path("authenticate").queryParam("username", username)
-                    .queryParam("password", hashed).accept(MediaType.APPLICATION_JSON).get(AuthenticationReplyMessage.class);
+            return service.path("authenticate").queryParam("username", username)
+                    .queryParam("password", hashed).request(MediaType.APPLICATION_JSON).get(AuthenticationReplyMessage.class);
         } catch (Exception e) {
             LOG.error("RestClient failed: " + e.getMessage());
             throw new RestException(e);
@@ -61,8 +58,8 @@ public class RestClient {
     public ReserveMmsiReplyMessage reserveMmsi(Integer mmsi, String authToken) throws RestException {
         LOG.info("Resverse mmsi: " + mmsi + " authToken: " + authToken);
         try {
-            return (ReserveMmsiReplyMessage) service.path("reserve_mmsi").queryParam("mmsi", Integer.toString(mmsi))
-                    .queryParam("authToken", authToken).accept(MediaType.APPLICATION_JSON).get(ReserveMmsiReplyMessage.class);
+            return service.path("reserve_mmsi").queryParam("mmsi", Integer.toString(mmsi))
+                    .queryParam("authToken", authToken).request(MediaType.APPLICATION_JSON).get(ReserveMmsiReplyMessage.class);
         } catch (Exception e) {
             LOG.error("RestClient failed: " + e.getMessage());
             throw new RestException(e);
@@ -72,8 +69,8 @@ public class RestClient {
     public TargetTableMessage getTargetTable(String username, String password) throws RestException {
         String hashed = Password.hashPassword(password);
         try {
-            return (TargetTableMessage) service.path("target_table").queryParam("username", username)
-                    .queryParam("password", hashed).accept(MediaType.APPLICATION_JSON).get(TargetTableMessage.class);
+            return service.path("target_table").queryParam("username", username)
+                    .queryParam("password", hashed).request(MediaType.APPLICATION_JSON).get(TargetTableMessage.class);
         } catch (Exception e) {
             LOG.error("RestClient failed: " + e.getMessage());
             throw new RestException(e);
@@ -82,7 +79,7 @@ public class RestClient {
 
     public String test() {
         try {
-            return (String) service.path("test").accept(MediaType.TEXT_PLAIN).get(String.class);
+            return service.path("test").request(MediaType.TEXT_PLAIN).get(String.class);
         } catch (Exception e) {
             LOG.error("RestClient failed: " + e.getMessage());
             return null;

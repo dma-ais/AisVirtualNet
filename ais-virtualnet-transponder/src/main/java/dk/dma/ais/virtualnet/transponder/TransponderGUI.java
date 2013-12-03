@@ -45,7 +45,7 @@ public class TransponderGUI extends AbstractCommandLineTool {
         });
     }
 
-    private void createAndShowGUI() {
+    void createAndShowGUI() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {

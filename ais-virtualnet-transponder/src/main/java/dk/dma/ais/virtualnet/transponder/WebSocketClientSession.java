@@ -17,34 +17,38 @@ package dk.dma.ais.virtualnet.transponder;
 
 import java.util.concurrent.CountDownLatch;
 
-import org.eclipse.jetty.websocket.api.Session;
+import javax.websocket.ClientEndpoint;
+import javax.websocket.OnClose;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
 
 import dk.dma.ais.virtualnet.common.message.WsMessage;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
+@ClientEndpoint
 public class WebSocketClientSession extends WebSocketSession {
-    
+
     private final CountDownLatch closed = new CountDownLatch(1);
-    
+
     private final ServerConnection connection;
     private final String authToken;
-    
+
     public WebSocketClientSession(ServerConnection connection, String authToken) {
         this.connection = connection;
         this.authToken = authToken;
     }
-    
-    @Override
-    public void onWebSocketConnect(Session session) {        
+
+    @OnOpen
+    public void onWebSocketConnect(Session session) {
         super.onWebSocketConnect(session);
         // Send credentials
         WsMessage msg = new WsMessage();
         msg.setAuthToken(authToken);
         sendMessage(msg);
     }
-    
-    @Override
-    public void onWebSocketClose(int statusCode, String reason) {        
+
+    @OnClose
+    public void onWebSocketClose(int statusCode, String reason) {
         super.onWebSocketClose(statusCode, reason);
         closed.countDown();
     }
@@ -53,11 +57,8 @@ public class WebSocketClientSession extends WebSocketSession {
     protected void handleMessage(WsMessage wsMessage) {
         connection.receive(wsMessage.getPacket());
     }
-    
+
     public CountDownLatch getClosed() {
         return closed;
     }
-    
-    
-
 }

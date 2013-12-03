@@ -31,7 +31,7 @@ import dk.dma.commons.app.AbstractDaemon;
  */
 public class TransponderDaemon extends AbstractDaemon {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TransponderDaemon.class);
+    static final Logger LOG = LoggerFactory.getLogger(TransponderDaemon.class);
 
     @Parameter(names = "-conf", description = "Transponder configuration file")
     String confFile = "transponder.xml";
@@ -39,7 +39,7 @@ public class TransponderDaemon extends AbstractDaemon {
     Transponder transponder;
 
     @Override
-    protected void runDaemon(Injector injector) throws Exception {       
+    protected void runDaemon(Injector injector) throws Exception {
         // Set default exception handler
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             @Override

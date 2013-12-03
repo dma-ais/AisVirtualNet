@@ -15,9 +15,12 @@
  */
 package dk.dma.ais.virtualnet.server;
 
+import javax.websocket.OnClose;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
+
 import net.jcip.annotations.ThreadSafe;
 
-import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +37,19 @@ import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 public class WebSocketServerSession extends WebSocketSession implements IQueueEntryHandler<AisPacket> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
+
     private final OverflowLogger overflowLogger = new OverflowLogger(LOG);
 
     private static final long OVERFLOW_TIMEOUT = 10 * 1000; // 10 sec
 
     private final AisVirtualNetServer server;
+
     private volatile boolean authenticated;
+
     private volatile String authToken;
+
     private volatile MessageQueueReader<AisPacket> queueReader;
+
     private long overflowStart;
 
     public WebSocketServerSession(AisVirtualNetServer server) {
@@ -49,15 +57,17 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
     }
 
     @Override
+    @OnOpen
     public void onWebSocketConnect(Session session) {
         // Setup message queue and message queue reader
-        queueReader = new MessageQueueReader<AisPacket>(this, new BlockingMessageQueue<AisPacket>(), 10);
+        queueReader = new MessageQueueReader<>(this, new BlockingMessageQueue<AisPacket>(), 10);
         queueReader.start();
         super.onWebSocketConnect(session);
         server.addClient(this);
     }
 
     @Override
+    @OnClose
     public void onWebSocketClose(int statusCode, String reason) {
         MessageQueueReader<AisPacket> qr = queueReader;
         String at = authToken;

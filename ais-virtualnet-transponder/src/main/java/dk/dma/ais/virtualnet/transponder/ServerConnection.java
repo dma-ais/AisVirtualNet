@@ -18,7 +18,9 @@ package dk.dma.ais.virtualnet.transponder;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jetty.websocket.client.WebSocketClient;
+import javax.websocket.ContainerProvider;
+import javax.websocket.WebSocketContainer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,11 +124,12 @@ public class ServerConnection extends Thread {
         // Make session
         session = new WebSocketClientSession(this, authToken);
         // Make client and connect
-        WebSocketClient client = new WebSocketClient();
+
+        WebSocketContainer client = ContainerProvider.getWebSocketContainer();
+
         String serverUrl = conf.createServerUrl();
         try {
-            client.start();
-            client.connect(session, new URI(serverUrl)).get();
+            client.connectToServer(session, new URI(serverUrl));
             if (!session.getConnected().await(10, TimeUnit.SECONDS)) {
                 LOG.error("Connection timeout");
                 transponder.getStatus().setServerError("Connection timeout");

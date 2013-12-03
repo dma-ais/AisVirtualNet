@@ -106,11 +106,11 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
     public TransponderFrame() {
         this("transponder.xml");
     }
-        
+
     public TransponderFrame(String conffile) {
         this(conffile, false, null);
     }
-    
+
     public TransponderFrame(boolean embeeded) {
         this("transponder.xml", embeeded, null);
     }
@@ -151,7 +151,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
      * 
      * @param status
      */
-    private void updateStatus(TransponderStatus status) {
+    void updateStatus(TransponderStatus status) {
         if (transponder == null) {
             return;
         }
@@ -459,7 +459,7 @@ public class TransponderFrame extends JFrame implements ActionListener, ITranspo
             System.exit(0);
         }
     }
-    
+
     public void shutdown() {
         if (transponder != null) {
             stopTransponder();

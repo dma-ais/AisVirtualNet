@@ -28,9 +28,9 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.websocket.api.UpgradeRequest;
-import org.eclipse.jetty.websocket.api.UpgradeResponse;
 import org.eclipse.jetty.websocket.server.WebSocketHandler;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.slf4j.Logger;
@@ -54,17 +54,24 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     private static final Logger LOG = LoggerFactory.getLogger(AisVirtualNetServer.class);
 
     private final AisBus aisBus;
+
     private final Server server;
+
     private final CollectorProvider collector = new CollectorProvider();
+
     private final DistributerConsumer distributer = new DistributerConsumer();
+
     private final TargetTable targetTable = new TargetTable();
+
     private final Authenticator authenticator;
+
     private final MmsiBroker mmsiBroker;
-    
+
     /**
      * Connected clients
      */
-    private final Set<WebSocketServerSession> clients = Collections.newSetFromMap(new ConcurrentHashMap<WebSocketServerSession, Boolean>());
+    private final Set<WebSocketServerSession> clients = Collections
+            .newSetFromMap(new ConcurrentHashMap<WebSocketServerSession, Boolean>());
 
     public AisVirtualNetServer(ServerConfiguration conf, String usersFile) throws IOException {
         // Create web server
@@ -73,16 +80,16 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         ((ServerConnector) server.getConnectors()[0]).setReuseAddress(true);
         // Create and register websocket handler
         final AisVirtualNetServer virtualNetServer = this;
-        WebSocketHandler wsHandler = new WebSocketHandler() {            
+        WebSocketHandler wsHandler = new WebSocketHandler() {
             @Override
             public void configure(WebSocketServletFactory factory) {
                 factory.setCreator(new WebSocketCreator() {
-                    public Object createWebSocket(UpgradeRequest req, UpgradeResponse resp) {
+                    public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
                         return new WebSocketServerSession(virtualNetServer);
                     }
                 });
             }
-        };        
+        };
         ContextHandler wsContext = new ContextHandler();
         wsContext.setContextPath("/ws");
         wsContext.setHandler(wsHandler);
@@ -90,35 +97,35 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         WebAppContext webappContext = new WebAppContext();
         webappContext.setServer(server);
         webappContext.setContextPath("/");
-        webappContext.setWar("web");        
+        webappContext.setWar("web");
         ContextHandlerCollection contexts = new ContextHandlerCollection();
         contexts.setHandlers(new Handler[] { wsContext, webappContext });
         server.setHandler(contexts);
-        
+
         // Create authenticator
         authenticator = new Authenticator(usersFile);
-        
+
         // Create MMSI broker
         mmsiBroker = new MmsiBroker();
-        
+
         // Create AisBus
         aisBus = conf.getAisbusConfiguration().getInstance();
         // Initialize distributer and register in aisbus
         distributer.getConsumers().add(this);
         distributer.init();
         aisBus.registerConsumer(distributer);
-        // Initialize collector and register in aisbus        
+        // Initialize collector and register in aisbus
         collector.init();
-        aisBus.registerProvider(collector);        
+        aisBus.registerProvider(collector);
     }
-    
+
     public StatusMessage getStatus() {
         StatusMessage message = new StatusMessage();
         message.setMessageRate(distributer.getStatus().getInRate());
         message.setConnectedClients(clients.size());
         return message;
     }
-    
+
     /**
      * Accept packet from AisBus
      */
@@ -134,27 +141,30 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
             LOG.debug("\t\tDone enqueing at client");
         }
     }
-    
+
     /**
      * Distribute packet to AisBus
+     * 
      * @param packet
      */
     public void distribute(AisPacket packet) {
         collector.accept(packet);
     }
-    
+
     /**
      * Add a new client
+     * 
      * @param session
      */
     public void addClient(WebSocketServerSession session) {
         LOG.info("Adding client");
-        clients.add(session);        
+        clients.add(session);
         LOG.info("Client count: " + clients.size());
     }
-    
+
     /**
      * Remove client
+     * 
      * @param session
      */
     public void removeClient(WebSocketServerSession session) {
@@ -168,7 +178,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     public void start() {
         // Register server in provider
         AisVirtualNetServerProvider.setServer(this);
-        
+
         try {
             server.start();
             LOG.info("Ready to accept incoming sockets");
@@ -176,11 +186,10 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
             LOG.error("Failed to start server", e);
             try {
                 server.stop();
-            } catch (Exception e1) {
-            }
+            } catch (Exception e1) {}
             return;
         }
-        
+
         // Start aisbus
         aisBus.startConsumers();
         aisBus.startProviders();
@@ -196,17 +205,17 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
         } catch (Exception e) {
             LOG.error("Failed to stop web server", e);
         }
-        
+
         if (aisBus != null) {
             LOG.info("Cancelling AisBus");
             aisBus.cancel();
         }
-        
+
         LOG.info("Closing open web sockets");
         for (WebSocketServerSession client : clients) {
             client.close();
         }
-        
+
         LOG.info("Waiting for server to stop");
         this.interrupt();
         try {
@@ -229,25 +238,28 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
             targetTable.cleanup();
         }
     }
-    
+
     /**
      * Get current target table
+     * 
      * @return
      */
     public TargetTable getTargetTable() {
         return targetTable;
     }
-    
+
     /**
      * Get authenticator
+     * 
      * @return
      */
     public Authenticator getAuthenticator() {
         return authenticator;
     }
-    
+
     /**
      * Get MMSI broker
+     * 
      * @return
      */
     public MmsiBroker getMmsiBroker() {
@@ -255,7 +267,8 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     }
 
     /**
-     * Check token 
+     * Check token
+     * 
      * @param authToken
      * @return
      */

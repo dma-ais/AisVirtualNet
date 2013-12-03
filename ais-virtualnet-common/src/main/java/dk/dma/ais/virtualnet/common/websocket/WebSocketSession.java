@@ -18,12 +18,17 @@ package dk.dma.ais.virtualnet.common.websocket;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
+import javax.websocket.CloseReason;
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.RemoteEndpoint;
+import javax.websocket.Session;
+
 import net.jcip.annotations.ThreadSafe;
 
-import org.eclipse.jetty.websocket.api.RemoteEndpoint;
-import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketException;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +38,7 @@ import dk.dma.ais.packet.AisPacket;
 import dk.dma.ais.virtualnet.common.message.WsMessage;
 
 @ThreadSafe
-public abstract class WebSocketSession implements WebSocketListener {
+public abstract class WebSocketSession {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketSession.class);
 
@@ -43,45 +48,41 @@ public abstract class WebSocketSession implements WebSocketListener {
 
     private volatile Session session;
 
-    public WebSocketSession() {
-
-    }
-
     /**
      * Method to handle incoming messages
      */
     protected abstract void handleMessage(WsMessage wsMessage);
 
-    @Override
+    @OnOpen
     public void onWebSocketConnect(Session session) {
-        LOG.info("Client connected: " + session.getRemoteAddress());
+        LOG.info("Client connected: " + session.getUserProperties());
         this.session = session;
         getConnected().countDown();
     }
 
-    @Override
+    @OnClose
     public void onWebSocketClose(int statusCode, String reason) {
-        LOG.info("Client connection closed: " + session.getRemoteAddress());
+        LOG.info("Client connection closed: " + session.getUserProperties());
         session = null;
     }
 
-    @Override
+    @OnMessage
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         Session s = session;
         LOG.error("Received binary data");
         try {
-            s.close(1, "Expected text only");
-        } catch (IOException e) {
+            s.close(new CloseReason(CloseReason.CloseCodes.PROTOCOL_ERROR, "Cannot accept binary"));
+        } catch (Exception e) {
             LOG.error("Failed to close web sokcet", e);
         }
     }
 
-    @Override
+    @OnError
     public void onWebSocketError(Throwable t) {
         LOG.error("Websocket error: " + t.getMessage());
     }
 
-    @Override
+    @OnMessage
     public void onWebSocketText(String message) {
         // Try to deserialize into message
         WsMessage msg = gson.fromJson(message, WsMessage.class);
@@ -96,7 +97,7 @@ public abstract class WebSocketSession implements WebSocketListener {
             if (s != null) {
                 s.close();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Failed to close web socket: " + e.getMessage());
         }
     }
@@ -111,15 +112,15 @@ public abstract class WebSocketSession implements WebSocketListener {
 
     private void sendText(String text) {
         Session s = session;
-        RemoteEndpoint r = null;
+        RemoteEndpoint.Basic r = null;
         try {
-            r = s == null ? null : s.getRemote();            
+            r = s == null ? null : s.getBasicRemote();
         } catch (WebSocketException e) {
             // Ignore
         }
         if (r != null) {
             try {
-                r.sendString(text);
+                r.sendText(text);
             } catch (IOException e) {
                 LOG.error("Failed to send text");
             }

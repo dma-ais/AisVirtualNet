@@ -44,24 +44,25 @@ public class Authenticator {
     private static final long TTL = 300000; // 5 min
 
     private final ConcurrentHashMap<String, Long> tokenMap = new ConcurrentHashMap<>();
+
     private final Map<String, String> usersMap = new HashMap<>();
 
     public Authenticator(String usersFile) throws IOException {
         // Load users
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(usersFile)));
-        for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-            line = line.trim();
-            if (line.length() == 0 || line.charAt(0) == '#') {
-                continue;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(usersFile)))) {
+            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+                line = line.trim();
+                if (line.length() == 0 || line.charAt(0) == '#') {
+                    continue;
+                }
+                String[] parts = line.split(":");
+                if (parts.length != 2) {
+                    LOG.error("Malformed line in " + usersFile + ": " + line);
+                    continue;
+                }
+                usersMap.put(parts[0], parts[1]);
             }
-            String[] parts = line.split(":");
-            if (parts.length != 2) {
-                LOG.error("Malformed line in " + usersFile + ": " + line);
-                continue;
-            }
-            usersMap.put(parts[0], parts[1]);
         }
-        reader.close();
     }
 
     /**
@@ -109,7 +110,7 @@ public class Authenticator {
     private void cleanup() {
         long now = System.currentTimeMillis();
         for (Iterator<Entry<String, Long>> it = tokenMap.entrySet().iterator(); it.hasNext();) {
-            Long time = ((Entry<String, Long>) it.next()).getValue();
+            Long time = it.next().getValue();
             if (now - time > TTL) {
                 it.remove();
             }
