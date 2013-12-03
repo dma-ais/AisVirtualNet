@@ -15,9 +15,11 @@
  */
 package dk.dma.ais.virtualnet.server;
 
+import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.server.ServerEndpoint;
 
 import net.jcip.annotations.ThreadSafe;
 
@@ -34,6 +36,7 @@ import dk.dma.ais.virtualnet.common.message.WsMessage;
 import dk.dma.ais.virtualnet.common.websocket.WebSocketSession;
 
 @ThreadSafe
+@ServerEndpoint(value = "/")
 public class WebSocketServerSession extends WebSocketSession implements IQueueEntryHandler<AisPacket> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketServerSession.class);
@@ -56,7 +59,6 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
         this.server = server;
     }
 
-    @Override
     @OnOpen
     public void onWebSocketConnect(Session session) {
         // Setup message queue and message queue reader
@@ -66,9 +68,8 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
         server.addClient(this);
     }
 
-    @Override
     @OnClose
-    public void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(CloseReason reason) {
         MessageQueueReader<AisPacket> qr = queueReader;
         String at = authToken;
         if (qr != null) {
@@ -79,7 +80,7 @@ public class WebSocketServerSession extends WebSocketSession implements IQueueEn
         if (at != null) {
             server.getMmsiBroker().release(at);
         }
-        super.onWebSocketClose(statusCode, reason);
+        super.onWebSocketClose(reason);
     }
 
     public void enqueuePacket(AisPacket packet) {

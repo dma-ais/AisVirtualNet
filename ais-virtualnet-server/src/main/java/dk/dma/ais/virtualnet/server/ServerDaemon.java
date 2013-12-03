@@ -32,20 +32,21 @@ import dk.dma.commons.app.AbstractDaemon;
  * AisVirtualNetServer server daemon
  */
 public class ServerDaemon extends AbstractDaemon {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(ServerDaemon.class);
-    
+
     @Parameter(names = "-conf", description = "AisVirtualNetServer server configuration file")
     String confFile = "server.xml";
+
     @Parameter(names = "-users", description = "AisVirtualNetServer server users file")
     String usersFile = "users.txt";
-    
+
     AisVirtualNetServer server;
-    
+
     @Override
     protected void runDaemon(Injector injector) throws Exception {
         LOG.info("Starting AisVirtualNetServer server with configuration: " + confFile);
-        
+
         // Load configuration
         ServerConfiguration conf;
         try {
@@ -54,17 +55,17 @@ public class ServerDaemon extends AbstractDaemon {
             LOG.error(e.getMessage());
             return;
         }
-        
+
         // Start server
         try {
-        server = new AisVirtualNetServer(conf, usersFile);
+            server = new AisVirtualNetServer(conf, usersFile);
         } catch (IOException e) {
             LOG.error(e.getMessage());
             return;
         }
-        server.start();        
+        server.start();
     }
-    
+
     @Override
     public void shutdown() {
         LOG.info("Shutting down");
@@ -73,9 +74,9 @@ public class ServerDaemon extends AbstractDaemon {
         }
         super.shutdown();
     }
-    
+
     public static void main(String[] args) throws Exception {
-        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {            
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
                 LOG.error("Uncaught exception in thread " + t.getClass().getCanonicalName() + ": " + e.getMessage(), e);

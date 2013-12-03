@@ -19,10 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import javax.websocket.CloseReason;
-import javax.websocket.OnClose;
 import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
@@ -53,20 +50,17 @@ public abstract class WebSocketSession {
      */
     protected abstract void handleMessage(WsMessage wsMessage);
 
-    @OnOpen
     public void onWebSocketConnect(Session session) {
         LOG.info("Client connected: " + session.getUserProperties());
         this.session = session;
         getConnected().countDown();
     }
 
-    @OnClose
-    public void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(CloseReason reason) {
         LOG.info("Client connection closed: " + session.getUserProperties());
         session = null;
     }
 
-    @OnMessage
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         Session s = session;
         LOG.error("Received binary data");
@@ -82,7 +76,6 @@ public abstract class WebSocketSession {
         LOG.error("Websocket error: " + t.getMessage());
     }
 
-    @OnMessage
     public void onWebSocketText(String message) {
         // Try to deserialize into message
         WsMessage msg = gson.fromJson(message, WsMessage.class);

@@ -15,11 +15,12 @@
  */
 package dk.dma.ais.virtualnet.server.rest;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
@@ -40,8 +41,11 @@ public class RestService {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestService.class);
 
-    @Context
-    private AisVirtualNetServer server = AisVirtualNetServerProvider.server;
+    private final AisVirtualNetServer server;
+
+    public RestService(AisVirtualNetServer server) {
+        this.server = requireNonNull(server);
+    }
 
     @GET
     @Path("status")

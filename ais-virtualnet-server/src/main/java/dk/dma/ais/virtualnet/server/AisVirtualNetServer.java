@@ -15,24 +15,12 @@
  */
 package dk.dma.ais.virtualnet.server;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.jcip.annotations.ThreadSafe;
 
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.websocket.server.WebSocketHandler;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +43,7 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
 
     private final AisBus aisBus;
 
-    private final Server server;
+    private final WebServer server;
 
     private final CollectorProvider collector = new CollectorProvider();
 
@@ -73,34 +61,12 @@ public class AisVirtualNetServer extends Thread implements Consumer<AisPacket> {
     private final Set<WebSocketServerSession> clients = Collections
             .newSetFromMap(new ConcurrentHashMap<WebSocketServerSession, Boolean>());
 
-    public AisVirtualNetServer(ServerConfiguration conf, String usersFile) throws IOException {
+    public AisVirtualNetServer(ServerConfiguration conf, String usersFile) throws Exception {
         // Create web server
-        server = new Server(conf.getPort());
+        server = new WebServer(this, conf.getPort());
         // Sets setReuseAddress
-        ((ServerConnector) server.getConnectors()[0]).setReuseAddress(true);
         // Create and register websocket handler
-        final AisVirtualNetServer virtualNetServer = this;
-        WebSocketHandler wsHandler = new WebSocketHandler() {
-            @Override
-            public void configure(WebSocketServletFactory factory) {
-                factory.setCreator(new WebSocketCreator() {
-                    public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
-                        return new WebSocketServerSession(virtualNetServer);
-                    }
-                });
-            }
-        };
-        ContextHandler wsContext = new ContextHandler();
-        wsContext.setContextPath("/ws");
-        wsContext.setHandler(wsHandler);
-        // Create and register web app context
-        WebAppContext webappContext = new WebAppContext();
-        webappContext.setServer(server);
-        webappContext.setContextPath("/");
-        webappContext.setWar("web");
-        ContextHandlerCollection contexts = new ContextHandlerCollection();
-        contexts.setHandlers(new Handler[] { wsContext, webappContext });
-        server.setHandler(contexts);
+
 
         // Create authenticator
         authenticator = new Authenticator(usersFile);

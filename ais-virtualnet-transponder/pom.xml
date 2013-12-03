@@ -38,6 +38,13 @@
       <artifactId>javax-websocket-client-impl</artifactId>
       <version>${dependencies.jetty.version}</version>
     </dependency>
+    
+<dependency>
+    <groupId>org.glassfish.jersey.media</groupId>
+    <artifactId>jersey-media-moxy</artifactId>
+    <version>${dependencies.jersey.version}</version>
+</dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>

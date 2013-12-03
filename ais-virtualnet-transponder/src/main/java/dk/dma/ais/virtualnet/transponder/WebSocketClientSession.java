@@ -18,6 +18,7 @@ package dk.dma.ais.virtualnet.transponder;
 import java.util.concurrent.CountDownLatch;
 
 import javax.websocket.ClientEndpoint;
+import javax.websocket.CloseReason;
 import javax.websocket.OnClose;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
@@ -48,8 +49,8 @@ public class WebSocketClientSession extends WebSocketSession {
     }
 
     @OnClose
-    public void onWebSocketClose(int statusCode, String reason) {
-        super.onWebSocketClose(statusCode, reason);
+    public void onWebSocketClose(CloseReason  reason) {
+        super.onWebSocketClose(reason);
         closed.countDown();
     }
 

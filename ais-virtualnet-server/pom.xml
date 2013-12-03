@@ -37,6 +37,17 @@
       <artifactId>jetty-servlet</artifactId>
       <version>${dependencies.jetty.version}</version>
     </dependency>
+        <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-servlet</artifactId>
+      <version>${dependencies.jersey.version}</version>
+    </dependency>
+<dependency>
+    <groupId>org.glassfish.jersey.media</groupId>
+    <artifactId>jersey-media-moxy</artifactId>
+    <version>${dependencies.jersey.version}</version>
+</dependency>
+
      <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-client</artifactId>
