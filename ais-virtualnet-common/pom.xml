@@ -1,37 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+  http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>dk.dma.ais.virtualnet</groupId>
-		<artifactId>ais-virtualnet-parent</artifactId>
-		<version>0.1-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
-	</parent>
+  <parent>
+    <groupId>dk.dma.ais.virtualnet</groupId>
+    <artifactId>ais-virtualnet-parent</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-	<artifactId>ais-virtualnet-common</artifactId>
-	<version>0.1-SNAPSHOT</version>
-	<name>AisVirtualNet common</name>
-	<description>AisVirtualNet common</description>
+  <artifactId>ais-virtualnet-common</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <name>AisVirtualNet common</name>
+  <description>AisVirtualNet common</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.mindrot</groupId>
-			<artifactId>jbcrypt</artifactId>
-			<version>0.3m</version>
-		</dependency>
-		
+  <dependencies>
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>0.3m</version>
+    </dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
       <artifactId>javax-websocket-client-impl</artifactId>
       <version>${dependencies.jetty.version}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>dk.dma.web</groupId>
+      <artifactId>dma-web-rest</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-moxy</artifactId>
+      <version>${dependencies.jersey.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.glassfish.jersey.core</groupId>
+          <artifactId>jersey-common</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
       <version>${dependencies.jetty.version}</version>
     </dependency>
-	</dependencies>
+  </dependencies>
 
 </project>
