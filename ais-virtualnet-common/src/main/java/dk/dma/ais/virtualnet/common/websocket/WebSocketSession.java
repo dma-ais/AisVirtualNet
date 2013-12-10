@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.websocket.CloseReason;
 import javax.websocket.OnError;
+import javax.websocket.OnMessage;
 import javax.websocket.RemoteEndpoint;
 import javax.websocket.Session;
 
@@ -76,6 +77,7 @@ public abstract class WebSocketSession {
         LOG.error("Websocket error: " + t.getMessage());
     }
 
+    @OnMessage
     public void onWebSocketText(String message) {
         // Try to deserialize into message
         WsMessage msg = gson.fromJson(message, WsMessage.class);
