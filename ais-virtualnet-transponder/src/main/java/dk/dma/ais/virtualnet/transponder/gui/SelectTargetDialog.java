@@ -15,20 +15,24 @@
  */
 package dk.dma.ais.virtualnet.transponder.gui;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
+import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
 import dk.dma.ais.virtualnet.common.table.TargetTableEntry;
+
 import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -38,8 +42,7 @@ public class SelectTargetDialog extends JDialog implements ActionListener, ListS
     private static final long serialVersionUID = 1L;
 
     private Integer selectedTarget;
-    private final JList<TargetTableEntry> list;
-    private final DefaultListModel<TargetTableEntry> listModel;
+    private final SelectTargetList list = new SelectTargetList();
     private final JButton selectButton = new JButton("Select");
     private final JButton cancelButton = new JButton("Cancel");
 
@@ -49,32 +52,38 @@ public class SelectTargetDialog extends JDialog implements ActionListener, ListS
         setSize(300, 400);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(parent);
-        getContentPane().setLayout(null);
+        getContentPane().setLayout(new BorderLayout());
         
-        selectButton.setBounds(0, 344, 75,28);
+        JPanel btnPanel = new JPanel();
+        selectButton.setPreferredSize(new Dimension(75, 28));
         selectButton.setEnabled(false);
         selectButton.addActionListener(this);
-        getContentPane().add(selectButton);
-        cancelButton.setBounds(78, 344, 75,28);
+        btnPanel.add(selectButton);
+        cancelButton.setPreferredSize(new Dimension(75, 28));
         cancelButton.addActionListener(this);
-        getContentPane().add(cancelButton);
+        btnPanel.add(cancelButton);
+        getContentPane().add(btnPanel, BorderLayout.SOUTH);
         
-
-        listModel = new DefaultListModel<>();
-        list = new JList<>(listModel);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setLayoutOrientation(JList.VERTICAL);
         list.addListSelectionListener(this);
-
         JScrollPane listScroller = new JScrollPane(list);
         listScroller.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         listScroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        listScroller.setBounds(6, 6, 288, 333);        
-        getContentPane().add(listScroller);
+        getContentPane().add(listScroller, BorderLayout.CENTER);
 
+        getContentPane().add(list.getFilterField(), BorderLayout.NORTH);
+        list.getFilterField().setPreferredSize(new Dimension(294, 24));
+        
         for (TargetTableEntry target : targets) {
-            listModel.addElement(target);
+            list.addTarget(target);
         }
+        
+        ActionListener escAction = new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) {
+                cancelButton.doClick();
+            }};
+        getRootPane().registerKeyboardAction(escAction,
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     public Integer getSelectedTarget() {
