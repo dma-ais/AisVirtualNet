@@ -76,13 +76,23 @@ public class SelectTargetDialog extends JDialog implements ActionListener, ListS
         for (TargetTableEntry target : targets) {
             list.addTarget(target);
         }
-        
+
+        // Hitting the escape key should simulate clicking "Cancel"
         ActionListener escAction = new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) {
                 cancelButton.doClick();
             }};
         getRootPane().registerKeyboardAction(escAction,
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        // Hitting the enter key should simulate clicking "Select"
+        ActionListener enterAction = new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) {
+                selectButton.doClick();
+            }};
+        getRootPane().registerKeyboardAction(enterAction,
+                KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 

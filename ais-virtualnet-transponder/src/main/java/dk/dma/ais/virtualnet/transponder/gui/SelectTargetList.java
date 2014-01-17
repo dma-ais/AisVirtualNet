@@ -25,6 +25,8 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -104,6 +106,14 @@ public class SelectTargetList extends JList<TargetTableEntry> {
     public JTextField getFilterField() {
         return filterField;
     }   
+    
+    /**
+     * Sets the first target in the list as the selected one, and requests focus
+     */
+    protected void setlectFirstTarget() {
+        setSelectedIndex(0);
+        requestFocus();
+    }
     
     /**
      * The {@code TargetFilterModel} class.
@@ -215,6 +225,16 @@ public class SelectTargetList extends JList<TargetTableEntry> {
                 @Override public void mouseClicked(MouseEvent e) {
                     if (showClearButton() && getClearRect().contains(e.getPoint())) {
                         setText("");
+                    }
+                }
+            });
+            
+            // If the user presses the down key, transfer focus to the
+            // first target in the list
+            addKeyListener(new KeyAdapter() {
+                @Override public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                        setlectFirstTarget();
                     }
                 }
             });
