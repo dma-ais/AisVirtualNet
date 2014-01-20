@@ -134,7 +134,11 @@ public class TransponderConfiguration {
     public static TransponderConfiguration load(String filename) throws JAXBException, FileNotFoundException {
         JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
         Unmarshaller um = context.createUnmarshaller();
-        return (TransponderConfiguration) um.unmarshal(new FileInputStream(new File(filename)));
+        TransponderConfiguration conf = (TransponderConfiguration) um.unmarshal(new FileInputStream(new File(filename)));
+        if (isReadOnly()) {
+            conf.setOwnMmsi(0);
+        }
+        return conf;
     }
 
 }
