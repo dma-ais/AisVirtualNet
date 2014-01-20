@@ -29,6 +29,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class TransponderConfiguration {
 
+    private static final String READ_ONLY = "dma.settings.readonly";
+    
     private int ownMmsi;
     private int ownPosInterval = 5; // five seconds
     private int receiveRadius = 75000; // 75 km (approx 40 nm)
@@ -110,12 +112,23 @@ public class TransponderConfiguration {
         return "ws://" + serverHost + ":" + serverPort + "/ws/";
     }
 
+    /**
+     * Returns if the updated settings are persisted to disk
+     * @return if the updated settings are persisted to disk
+     */
+    public static boolean isReadOnly() {
+        return "true".equals(System.getProperty(READ_ONLY));
+    }
+    
+    
     public static void save(String filename, TransponderConfiguration conf) throws JAXBException, FileNotFoundException {
-        JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
-        Marshaller m = context.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-        m.marshal(conf, new FileOutputStream(new File(filename)));
+        if (!isReadOnly()) {
+            JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+            m.marshal(conf, new FileOutputStream(new File(filename)));
+        }
     }
 
     public static TransponderConfiguration load(String filename) throws JAXBException, FileNotFoundException {
