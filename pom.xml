@@ -4,7 +4,7 @@
   <parent>
     <groupId>dk.dma</groupId>
     <artifactId>dma-root-pom</artifactId>
-    <version>14</version>
+    <version>17</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -27,6 +27,10 @@
     <module>ais-virtualnet-server</module>
     <module>ais-virtualnet-transponder</module>
   </modules>
+  
+  <properties>
+	<dependencies.jersey.version>2.4.1</dependencies.jersey.version>
+  </properties>
 
   <dependencies>
     <dependency>
