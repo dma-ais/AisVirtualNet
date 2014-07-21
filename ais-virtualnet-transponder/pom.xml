@@ -10,7 +10,6 @@
 	</parent>
 
 	<artifactId>ais-virtualnet-transponder</artifactId>
-	<version>0.2-SNAPSHOT</version>
 	<name>AisVirtualNet transponder</name>
 	<description>AisVirtualNet transponder</description>
 

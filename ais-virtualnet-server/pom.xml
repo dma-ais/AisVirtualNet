@@ -10,7 +10,6 @@
   </parent>
 
   <artifactId>ais-virtualnet-server</artifactId>
-  <version>0.2-SNAPSHOT</version>
   <name>AisVirtualNet server</name>
   <description>AisVirtualNet server</description>
 

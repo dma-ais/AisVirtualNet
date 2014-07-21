@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.jcip.annotations.ThreadSafe;
@@ -60,6 +61,7 @@ public class Transponder extends Thread {
     private final ServerConnection serverConnection;
     private final ServerSocket serverSocket;
     private final TransponderOwnMessage ownMessage;
+    private final StreamTime psttSender;
     private final VdmVdoTransformer vdoTransformer;
     private final CropVdmTransformer cropTransformer;
 
@@ -80,6 +82,11 @@ public class Transponder extends Thread {
         ownMessage = new TransponderOwnMessage(this, conf.getOwnPosInterval());
         vdoTransformer = new VdmVdoTransformer(conf.getOwnMmsi(), "AI");
         cropTransformer = new CropVdmTransformer();
+        if (conf.isSendPsttSentence()) {
+            psttSender = new StreamTime();
+        } else {
+            psttSender = null;
+        }
     }
 
     /**
@@ -96,6 +103,15 @@ public class Transponder extends Thread {
         } catch (AisMessageException | SixbitException e) {
             LOG.debug("Failed to parse message: " + e.getMessage());
             return;
+        }
+
+        // Try to get timestamp and maybe send PSTT time sentence
+        Date timestamp = packet.getTimestamp();
+        if (psttSender != null && timestamp != null) {
+            psttSender.setStreamTime(timestamp.getTime());
+            if (psttSender.isDue()) {
+                send(psttSender.createPstt());
+            }
         }
 
         // Determine own
@@ -209,11 +225,13 @@ public class Transponder extends Thread {
         if (socket != null) {
             try {
                 socket.close();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+            }
         }
         try {
             serverSocket.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
         try {
             this.join(10000);
         } catch (InterruptedException e) {
@@ -242,11 +260,13 @@ public class Transponder extends Thread {
                 out = new PrintWriter(socket.getOutputStream());
                 status.setClientConnected(true);
                 readFromAI();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+            }
 
             try {
                 socket.close();
-            } catch (IOException e1) {}
+            } catch (IOException e1) {
+            }
 
             LOG.info("Lost connection to client");
         }
@@ -368,8 +388,7 @@ public class Transponder extends Thread {
         send(encoded);
     }
 
-    public static TargetTableMessage getTargets(String host, int port, String username, String password)
-            throws RestException {
+    public static TargetTableMessage getTargets(String host, int port, String username, String password) throws RestException {
         RestClient restClient = new RestClient(host, port);
         return restClient.getTargetTable(username, password);
     }

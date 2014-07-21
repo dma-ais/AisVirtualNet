@@ -36,6 +36,7 @@ public class TransponderConfiguration {
     private int serverPort;
     private String username;
     private String password;
+    private boolean sendPsttSentence = true;
 
     public TransponderConfiguration() {
 
@@ -108,7 +109,15 @@ public class TransponderConfiguration {
     public String createServerUrl() {
         return "ws://" + serverHost + ":" + serverPort + "/ws/";
     }
+    
+    public boolean isSendPsttSentence() {
+        return sendPsttSentence;
+    }
 
+    public void setSendPsttSentence(boolean sendPsttSentence) {
+        this.sendPsttSentence = sendPsttSentence;
+    }
+    
     public static void save(String filename, TransponderConfiguration conf) throws JAXBException, FileNotFoundException {
         JAXBContext context = JAXBContext.newInstance(TransponderConfiguration.class);
         Marshaller m = context.createMarshaller();
