@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>dk.dma.ais.virtualnet</groupId>
   <artifactId>ais-virtualnet-parent</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AisVirtualNet Parent</name>
   <description>AisVirtualNet parent module</description>
